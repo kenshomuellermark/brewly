@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
+from django.db import models
+from .models import Bookmark
 
 class CafeListView(ListView):
     model = Cafe
@@ -20,10 +22,36 @@ class CafeListView(ListView):
     ordering = ['-posted_at']
     paginate_by = 10
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Search
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(
+                models.Q(name__icontains=query) | models.Q(address__icontains=query)
+            )
+        # Filter
+        if self.request.GET.get('wifi'):
+            queryset = queryset.filter(has_wifi=True)
+        if self.request.GET.get('power'):
+            queryset = queryset.filter(has_power_outlet=True)
+        if self.request.GET.get('restroom'):
+            queryset = queryset.filter(has_restroom=True)
+        return queryset
+
 class CafeDetailView(DetailView):
     model = Cafe
     template_name = 'cafes/cafe_detail.html'
     context_object_name = 'cafe'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        cafe = self.get_object()
+        context['is_bookmarked'] = False
+        if user.is_authenticated:
+            context['is_bookmarked'] = cafe.bookmarked_by.filter(user=user).exists()
+        return context
 
 def register(request):
     if request.method == 'POST':
@@ -122,16 +150,15 @@ class UserProfileView(DetailView):
     context_object_name = 'profile_user'
 
     def get_object(self):
-        # Show the profile of the currently logged-in user
         return self.request.user
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add cafes posted by this user
         context['cafes'] = self.request.user.cafe_set.all()
-        # Add ratings made by this user
         context['ratings'] = self.request.user.rating_set.all()
-        return context 
+        # Add bookmarks
+        context['bookmarked_cafes'] = [bookmark.cafe for bookmark in self.request.user.bookmarks.all()]
+        return context
 
 @login_required
 def custom_password_change(request):
@@ -160,3 +187,29 @@ def edit_profile(request):
         u_form = UserUpdateForm(instance=request.user)
         p_form = ProfileUpdateForm(instance=request.user.profile)
     return render(request, 'cafes/edit_profile.html', {'u_form': u_form, 'p_form': p_form}) 
+
+
+
+# bookmark
+
+@login_required
+def add_bookmark(request, cafe_id):
+    cafe = get_object_or_404(Cafe, id=cafe_id)
+    Bookmark.objects.get_or_create(user=request.user, cafe=cafe)
+    messages.success(request, "Cafe saved!")
+    return redirect('cafe-detail', pk=cafe_id)
+
+@login_required
+def remove_bookmark(request, cafe_id):
+    cafe = get_object_or_404(Cafe, id=cafe_id)
+    Bookmark.objects.filter(user=request.user, cafe=cafe).delete()
+    messages.success(request, "Removed from saved.")
+    return redirect('cafe-detail', pk=cafe_id)
+
+
+
+# comments
+
+
+
+# map integration

@@ -28,6 +28,17 @@
     {% endfor %}
   </ul>
 
+  <h3>Your Saved Cafes</h3>
+  <ul>
+    {% for cafe in bookmarked_cafes %}
+      <li>
+        <a href="{% url 'cafe-detail' cafe.id %}">{{ cafe.name }}</a>
+      </li>
+    {% empty %}
+      <li>You haven't saved any cafes yet.</li>
+    {% endfor %}
+  </ul>
+
   {% if user == profile_user %}
     <a href="{% url 'edit_profile' %}">Edit Profile</a>
   {% endif %}

@@ -19,4 +19,6 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('profile/edit/', views.edit_profile, name='edit_profile'),
     path('change-password/', views.custom_password_change, name='custom_password_change'),
+    path('cafe/<int:cafe_id>/bookmark/', views.add_bookmark, name='add-bookmark'),
+    path('cafe/<int:cafe_id>/unbookmark/', views.remove_bookmark, name='remove-bookmark'),
 ]

@@ -50,4 +50,19 @@
   {% else %}
     <p><a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to rate this cafe.</p>
   {% endif %}
+
+  <!-- bookmark -->
+  {% if user.is_authenticated %}
+    {% if is_bookmarked %}
+      <form action="{% url 'remove-bookmark' cafe.id %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Remove from saved</button>
+      </form>
+    {% else %}
+      <form action="{% url 'add-bookmark' cafe.id %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit">Save</button>
+      </form>
+    {% endif %}
+  {% endif %}
 {% endblock %}

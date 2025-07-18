@@ -1,12 +1,23 @@
 {% extends "base.html" %}
 {% block content %}
   <h1>Study Cafes</h1>
+  <form method="get" style="margin-bottom: 1em;">
+    <input type="text" name="q" placeholder="Search by name or address" value="{{ request.GET.q }}">
+    <label><input type="checkbox" name="wifi" {% if request.GET.wifi %}checked{% endif %}> WiFi</label>
+    <label><input type="checkbox" name="power" {% if request.GET.power %}checked{% endif %}> Power Outlet</label>
+    <label><input type="checkbox" name="restroom" {% if request.GET.restroom %}checked{% endif %}> Restroom</label>
+    <button type="submit">Search/Filter</button>
+    <a href="{% url 'cafe-list' %}">Reset</a>
+  </form>
   <a href="{% url 'cafe-create' %}">Add New Cafe</a>
   <ul>
     {% for cafe in cafes %}
       <li>
         <a href="{% url 'cafe-detail' cafe.pk %}">{{ cafe.name }}</a>
         ({{ cafe.address }})
+        {% if cafe.has_wifi %} | WiFi{% endif %}
+        {% if cafe.has_power_outlet %} | Power{% endif %}
+        {% if cafe.has_restroom %} | Restroom{% endif %}
       </li>
     {% empty %}
       <li>No cafes found.</li>
