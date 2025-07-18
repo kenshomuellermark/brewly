@@ -20,9 +20,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
     path('', include('cafes.urls')), # include the urls from the cafes apps
-    path('accounts/', include('django.contrib.auth.urls')),
 ]
 
 # For serving media files during development

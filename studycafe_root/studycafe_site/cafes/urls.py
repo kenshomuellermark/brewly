@@ -17,4 +17,5 @@ urlpatterns = [
     path('rating/<int:rating_id>/delete/', views.delete_rating, name='delete-rating'),
     path('register/', views.register, name='register'),
     path('profile/', UserProfileView.as_view(), name='profile'),
+    path('change-password/', views.custom_password_change, name='custom_password_change'),
 ]

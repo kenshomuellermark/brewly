@@ -12,6 +12,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
 
 # Cafe Views (Class-based)
 class CafeListView(ListView):
@@ -129,3 +131,18 @@ class UserProfileView(DetailView):
         # Add ratings made by this user
         context['ratings'] = self.request.user.rating_set.all()
         return context 
+
+
+# Change password after login
+@login_required
+def custom_password_change(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            user = form.save()
+            update_session_auth_hash(request, user)  # Important!
+            messages.success(request, 'Your password was successfully updated!')
+            return redirect('profile')  # or wherever you want
+    else:
+        form = PasswordChangeForm(user=request.user)
+    return render(request, 'registration/custom_password_change.html', {'form': form}) 
