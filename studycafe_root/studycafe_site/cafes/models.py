@@ -1,6 +1,7 @@
+from django.db.models.signals import post_save
 from django.db import models
+from django.dispatch import receiver
 from django.contrib.auth.models import User
-
 
 # Create your models here.
 class Cafe(models.Model):
@@ -17,7 +18,6 @@ class Cafe(models.Model):
     def __str__(self):
         return self.name
 
-
 class Rating(models.Model):
     cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE, related_name='ratings')
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -30,3 +30,24 @@ class Rating(models.Model):
     
     def __str__(self):
         return f"{self.user.username} rated {self.cafe.name} {self.stars} stars"
+
+# also add comment later 
+
+
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    bio = models.TextField(blank=True)
+    profile_pic = models.ImageField(upload_to='profile_pics/', blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"
+
+
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        # When a new user is created, also create a Profile
+        Profile.objects.create(user=instance)
+    # Every time the user is saved, save the profile too
+    instance.profile.save()

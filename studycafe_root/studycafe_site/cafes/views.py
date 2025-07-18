@@ -1,21 +1,18 @@
+# --- Public Views (No Login Required) ---
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib import messages
 from .models import Cafe, Rating
-from .forms import UserRegisterForm
+from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
 from django.contrib.auth.models import User
-from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
-from django.views.generic import DetailView
-from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
 
-# Cafe Views (Class-based)
 class CafeListView(ListView):
     model = Cafe
     template_name = 'cafes/cafe_list.html'
@@ -27,6 +24,22 @@ class CafeDetailView(DetailView):
     model = Cafe
     template_name = 'cafes/cafe_detail.html'
     context_object_name = 'cafe'
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been created! You can now log in.')
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'registration/register.html', {'form': form}) 
+
+# --- Authenticated Views (Login Required) ---
+
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
 
 class CafeCreateView(LoginRequiredMixin, CreateView):
     model = Cafe
@@ -65,7 +78,6 @@ class CafeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         messages.success(request, 'Cafe deleted successfully!')
         return super().delete(request, *args, **kwargs)
 
-# Rating Views (Function-based)
 @login_required
 def add_rating(request, cafe_id):
     cafe = get_object_or_404(Cafe, id=cafe_id)
@@ -103,17 +115,6 @@ def delete_rating(request, rating_id):
     messages.success(request, 'Rating deleted successfully!')
     return redirect('cafe-detail', pk=cafe_id) 
 
-def register(request):
-    if request.method == 'POST':
-        form = UserRegisterForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Your account has been created! You can now log in.')
-            return redirect('login')
-    else:
-        form = UserRegisterForm()
-    return render(request, 'registration/register.html', {'form': form}) 
-
 @method_decorator(login_required, name='dispatch')
 class UserProfileView(DetailView):
     model = User
@@ -132,8 +133,6 @@ class UserProfileView(DetailView):
         context['ratings'] = self.request.user.rating_set.all()
         return context 
 
-
-# Change password after login
 @login_required
 def custom_password_change(request):
     if request.method == 'POST':
@@ -146,3 +145,18 @@ def custom_password_change(request):
     else:
         form = PasswordChangeForm(user=request.user)
     return render(request, 'registration/custom_password_change.html', {'form': form}) 
+
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=request.user)
+        p_form = ProfileUpdateForm(request.POST, request.FILES, instance=request.user.profile)
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, 'Your profile has been updated!')
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+        p_form = ProfileUpdateForm(instance=request.user.profile)
+    return render(request, 'cafes/edit_profile.html', {'u_form': u_form, 'p_form': p_form}) 
