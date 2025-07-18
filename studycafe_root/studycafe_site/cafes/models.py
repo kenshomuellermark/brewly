@@ -31,9 +31,14 @@ class Rating(models.Model):
     def __str__(self):
         return f"{self.user.username} rated {self.cafe.name} {self.stars} stars"
 
-# also add comment later 
 
+class Bookmark(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
+    cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE, related_name='bookmarked_by')
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ('user', 'cafe')
 
 
 class Profile(models.Model):
@@ -52,12 +57,3 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
     # Every time the user is saved, save the profile too
     instance.profile.save()
-
-
-class Bookmark(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookmarks')
-    cafe = models.ForeignKey(Cafe, on_delete=models.CASCADE, related_name='bookmarked_by')
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ('user', 'cafe')

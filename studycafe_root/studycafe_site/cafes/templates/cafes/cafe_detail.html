@@ -65,4 +65,17 @@
       </form>
     {% endif %}
   {% endif %}
+
+<h3>Comments</h3>
+<ul>
+  {% for rating in cafe.ratings.all %}
+    {% if rating.comment %}
+      <li>
+        <strong>{{ rating.user.username }}</strong>: {{ rating.comment }} ({{ rating.created_at|date:"Y-m-d" }})
+      </li>
+    {% endif %}
+  {% empty %}
+    <li>No comments yet.</li>
+  {% endfor %}
+</ul>
 {% endblock %}

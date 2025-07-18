@@ -211,5 +211,4 @@ def remove_bookmark(request, cafe_id):
 # comments
 
 
-
 # map integration
