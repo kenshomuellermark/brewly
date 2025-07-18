@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>User Profile: {{ profile_user.username }}</h2>
+  <p>Email: {{ profile_user.email }}</p>
+
+  <h3>Your Cafes</h3>
+  <ul>
+    {% for cafe in cafes %}
+      <li><a href="{% url 'cafe-detail' cafe.pk %}">{{ cafe.name }}</a></li>
+    {% empty %}
+      <li>You haven't posted any cafes yet.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Your Ratings</h3>
+  <ul>
+    {% for rating in ratings %}
+      <li>
+        {{ rating.cafe.name }}: {{ rating.stars }} stars
+        {% if rating.comment %} - "{{ rating.comment }}"{% endif %}
+      </li>
+    {% empty %}
+      <li>You haven't rated any cafes yet.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

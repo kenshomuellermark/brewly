@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ cafe.name }}</h1>
+  <p><strong>Address:</strong> {{ cafe.address }}</p>
+  <p><strong>Description:</strong> {{ cafe.description }}</p>
+  <p><strong>WiFi:</strong> {{ cafe.has_wifi|yesno:"Yes,No" }}</p>
+  <p><strong>Power Outlets:</strong> {{ cafe.has_power_outlet|yesno:"Yes,No" }}</p>
+  <p><strong>Restroom:</strong> {{ cafe.has_restroom|yesno:"Yes,No" }}</p>
+  {% if cafe.photo %}
+    <img src="{{ cafe.photo.url }}" alt="Cafe photo" style="max-width:300px;">
+  {% endif %}
+  <p>
+    <a href="{% url 'cafe-update' cafe.pk %}">Edit</a> |
+    <a href="{% url 'cafe-delete' cafe.pk %}">Delete</a> |
+    <a href="{% url 'cafe-list' %}">Back to list</a>
+  </p>
+  <hr>
+  <h2>Ratings</h2>
+  <ul>
+    {% for rating in cafe.ratings.all %}
+      <li>
+        <strong>{{ rating.user.username }}</strong>: {{ rating.stars }} stars
+        {% if rating.comment %} - "{{ rating.comment }}"{% endif %}
+        {% if user == rating.user %}
+          <form action="{% url 'delete-rating' rating.id %}" method="post" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+          </form>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>No ratings yet.</li>
+    {% endfor %}
+  </ul>
+  {% if user.is_authenticated %}
+    <h3>Add/Update Your Rating</h3>
+    <form action="{% url 'add-rating' cafe.id %}" method="post">
+      {% csrf_token %}
+      <label for="stars">Stars (1-5):</label>
+      <input type="number" name="stars" min="1" max="5" required>
+      <br>
+      <label for="comment">Comment:</label>
+      <input type="text" name="comment">
+      <br>
+      <button type="submit">Submit</button>
+    </form>
+  {% else %}
+    <p><a href="{% url 'login' %}?next={{ request.path }}">Log in</a> to rate this cafe.</p>
+  {% endif %}
+{% endblock %}

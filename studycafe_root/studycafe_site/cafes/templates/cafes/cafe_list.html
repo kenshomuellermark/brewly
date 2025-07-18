@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Study Cafes</h1>
+  <a href="{% url 'cafe-create' %}">Add New Cafe</a>
+  <ul>
+    {% for cafe in cafes %}
+      <li>
+        <a href="{% url 'cafe-detail' cafe.pk %}">{{ cafe.name }}</a>
+        ({{ cafe.address }})
+      </li>
+    {% empty %}
+      <li>No cafes found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

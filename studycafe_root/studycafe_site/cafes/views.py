@@ -1,0 +1,131 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.views.generic import ListView, DetailView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse_lazy
+from django.http import HttpResponseRedirect
+from django.contrib import messages
+from .models import Cafe, Rating
+from .forms import UserRegisterForm
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from django.views.generic import DetailView
+
+# Cafe Views (Class-based)
+class CafeListView(ListView):
+    model = Cafe
+    template_name = 'cafes/cafe_list.html'
+    context_object_name = 'cafes'
+    ordering = ['-posted_at']
+    paginate_by = 10
+
+class CafeDetailView(DetailView):
+    model = Cafe
+    template_name = 'cafes/cafe_detail.html'
+    context_object_name = 'cafe'
+
+class CafeCreateView(LoginRequiredMixin, CreateView):
+    model = Cafe
+    template_name = 'cafes/cafe_form.html'
+    fields = ['name', 'address', 'description', 'photo', 'has_wifi', 'has_power_outlet', 'has_restroom']
+    success_url = reverse_lazy('cafe-list')
+    
+    def form_valid(self, form):
+        form.instance.posted_by = self.request.user
+        messages.success(self.request, 'Cafe added successfully!')
+        return super().form_valid(form)
+
+class CafeUpdateView(LoginRequiredMixin, UpdateView):
+    model = Cafe
+    template_name = 'cafes/cafe_form.html'
+    fields = ['name', 'address', 'description', 'photo', 'has_wifi', 'has_power_outlet', 'has_restroom']
+    
+    def get_success_url(self):
+        messages.success(self.request, 'Cafe updated successfully!')
+        return reverse_lazy('cafe-detail', kwargs={'pk': self.object.pk})
+    
+    def get_queryset(self):
+        # Only allow users to edit their own cafes
+        return Cafe.objects.filter(posted_by=self.request.user)
+
+class CafeDeleteView(LoginRequiredMixin, DeleteView):
+    model = Cafe
+    template_name = 'cafes/cafe_confirm_delete.html'
+    success_url = reverse_lazy('cafe-list')
+    
+    def get_queryset(self):
+        # Only allow users to delete their own cafes
+        return Cafe.objects.filter(posted_by=self.request.user)
+    
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Cafe deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+# Rating Views (Function-based)
+@login_required
+def add_rating(request, cafe_id):
+    cafe = get_object_or_404(Cafe, id=cafe_id)
+    
+    if request.method == 'POST':
+        stars = request.POST.get('stars')
+        comment = request.POST.get('comment', '')
+        
+        if stars:
+            # Check if user already rated this cafe
+            rating, created = Rating.objects.get_or_create(
+                cafe=cafe,
+                user=request.user,
+                defaults={'stars': stars, 'comment': comment}
+            )
+            
+            if not created:
+                # Update existing rating
+                rating.stars = stars
+                rating.comment = comment
+                rating.save()
+                messages.success(request, 'Rating updated successfully!')
+            else:
+                messages.success(request, 'Rating added successfully!')
+        else:
+            messages.error(request, 'Please provide a rating.')
+    
+    return redirect('cafe-detail', pk=cafe_id)
+
+@login_required
+def delete_rating(request, rating_id):
+    rating = get_object_or_404(Rating, id=rating_id, user=request.user)
+    cafe_id = rating.cafe.id
+    rating.delete()
+    messages.success(request, 'Rating deleted successfully!')
+    return redirect('cafe-detail', pk=cafe_id) 
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Your account has been created! You can now log in.')
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'registration/register.html', {'form': form}) 
+
+@method_decorator(login_required, name='dispatch')
+class UserProfileView(DetailView):
+    model = User
+    template_name = 'cafes/profile.html'
+    context_object_name = 'profile_user'
+
+    def get_object(self):
+        # Show the profile of the currently logged-in user
+        return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Add cafes posted by this user
+        context['cafes'] = self.request.user.cafe_set.all()
+        # Add ratings made by this user
+        context['ratings'] = self.request.user.rating_set.all()
+        return context 
