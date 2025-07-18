@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
@@ -39,7 +39,7 @@ class CafeCreateView(LoginRequiredMixin, CreateView):
         messages.success(self.request, 'Cafe added successfully!')
         return super().form_valid(form)
 
-class CafeUpdateView(LoginRequiredMixin, UpdateView):
+class CafeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Cafe
     template_name = 'cafes/cafe_form.html'
     fields = ['name', 'address', 'description', 'photo', 'has_wifi', 'has_power_outlet', 'has_restroom']
@@ -48,18 +48,18 @@ class CafeUpdateView(LoginRequiredMixin, UpdateView):
         messages.success(self.request, 'Cafe updated successfully!')
         return reverse_lazy('cafe-detail', kwargs={'pk': self.object.pk})
     
-    def get_queryset(self):
-        # Only allow users to edit their own cafes
-        return Cafe.objects.filter(posted_by=self.request.user)
+    def test_func(self):
+        cafe = self.get_object()
+        return cafe.posted_by == self.request.user
 
-class CafeDeleteView(LoginRequiredMixin, DeleteView):
+class CafeDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Cafe
     template_name = 'cafes/cafe_confirm_delete.html'
     success_url = reverse_lazy('cafe-list')
     
-    def get_queryset(self):
-        # Only allow users to delete their own cafes
-        return Cafe.objects.filter(posted_by=self.request.user)
+    def test_func(self):
+        cafe = self.get_object()
+        return cafe.posted_by == self.request.user
     
     def delete(self, request, *args, **kwargs):
         messages.success(request, 'Cafe deleted successfully!')

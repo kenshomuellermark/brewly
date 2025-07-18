@@ -10,8 +10,11 @@
     <img src="{{ cafe.photo.url }}" alt="Cafe photo" style="max-width:300px;">
   {% endif %}
   <p>
-    <a href="{% url 'cafe-update' cafe.pk %}">Edit</a> |
-    <a href="{% url 'cafe-delete' cafe.pk %}">Delete</a> |
+    <!-- so that only users who posted can edit the cafe -->
+    {% if user == cafe.posted_by %}
+      <a href="{% url 'cafe-update' cafe.pk %}">Edit</a> |
+      <a href="{% url 'cafe-delete' cafe.pk %}">Delete</a> |
+    {% endif %}
     <a href="{% url 'cafe-list' %}">Back to list</a>
   </p>
   <hr>
