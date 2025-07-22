@@ -46,5 +46,20 @@
   <div class="main-container">
     {% block content %}{% endblock %}
   </div>
+
+  <script>
+    // Auto-hide messages after 3 seconds
+    document.addEventListener('DOMContentLoaded', function() {
+      const messages = document.querySelectorAll('.message');
+      messages.forEach(function(message) {
+        setTimeout(function() {
+          message.style.opacity = '0';
+          setTimeout(function() {
+            message.remove();
+          }, 300); // Wait for fade out animation
+        }, 3000); // Hide after 3 seconds
+      });
+    });
+  </script>
 </body>
 </html>

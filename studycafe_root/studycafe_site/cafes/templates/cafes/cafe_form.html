@@ -1,65 +1,88 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="form-container" style="max-width: 800px;">
-    <h1 class="form-title">{% if form.instance.pk %}Edit Cafe{% else %}Add New Cafe{% endif %}</h1>
-    
-    <form method="post" enctype="multipart/form-data">
+  <h1 class="text-center mb-30">{% if form.instance.pk %}Edit Cafe{% else %}Add New Cafe{% endif %}</h1>
+  
+  <div class="cafe-form-container">
+    <!-- Left: Location Map -->
+    <div class="location-section">
+      <h3 style="margin-bottom: 20px;">📍 Find Cafe Location</h3>
+      <div class="search-box" style="margin-bottom: 15px;">
+        <input type="text" id="address-search" class="search-input" placeholder="Search for an address..." style="border-radius: 25px;">
+        <button type="button" id="address-search-btn" class="search-btn" style="border-radius: 25px;">Search</button>
+      </div>
+      <div id="resolved-address" style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 15px; font-style: italic; color: #555;"></div>
+      <div id="map" class="map-element" style="height: 400px; border-radius: 15px; overflow: hidden;"></div>
+    </div>
+
+    <!-- Right: Cafe Form -->
+    <div class="form-section">
+      <h3 style="margin: 0 0 20px 0; font-size: 18px;">Cafe Details</h3>
+      <form method="post" enctype="multipart/form-data">
       {% csrf_token %}
       
       {% for field in form %}
-        <div class="form-group">
-          <label for="{{ field.id_for_label }}" class="form-label">
-            {{ field.label }}
-            {% if field.field.required %}<span style="color: #dc3545;">*</span>{% endif %}
-          </label>
-          
-          {% if field.name == 'description' %}
-            <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-textarea">{{ field.value|default:'' }}</textarea>
-          {% elif field.name == 'has_wifi' or field.name == 'has_power_outlet' or field.name == 'has_restroom' %}
-            <div style="display: flex; align-items: center;">
-              <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %} style="width: auto; margin-right: 10px;">
-              <label for="{{ field.id_for_label }}" style="margin: 0; font-weight: normal; cursor: pointer;">
-                {% if field.name == 'has_wifi' %}📶 WiFi Available
-                {% elif field.name == 'has_power_outlet' %}🔌 Power Outlets
-                {% elif field.name == 'has_restroom' %}🚻 Restroom Access
-                {% endif %}
-              </label>
-            </div>
-          {% elif field.name == 'opening_time' or field.name == 'closing_time' %}
-            <input type="time" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-input" value="{{ field.value|default:'' }}">
-          {% elif field.name == 'latitude' or field.name == 'longitude' %}
-            <input type="hidden" name="{{ field.name }}" value="{{ field.value|default:'' }}">
-          {% else %}
-            <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-input" value="{{ field.value|default:'' }}" {% if field.field.required %}required{% endif %}>
-          {% endif %}
-          
-          {% if field.errors %}
-            <p class="error-text small-text">{{ field.errors.0 }}</p>
-          {% endif %}
-          {% if field.help_text %}
-            <p class="small-text" style="color: #666; margin-top: 5px;">{{ field.help_text }}</p>
-          {% endif %}
-        </div>
+        {% if field.name == 'has_wifi' or field.name == 'has_power_outlet' or field.name == 'has_restroom' %}
+          <!-- Skip individual amenity fields, we'll handle them together below -->
+        {% elif field.name == 'latitude' or field.name == 'longitude' %}
+          <input type="hidden" name="{{ field.name }}" value="{{ field.value|default:'' }}">
+        {% else %}
+          <div class="form-group" style="margin-bottom: 15px;">
+            <label for="{{ field.id_for_label }}" class="form-label" style="font-size: 14px; margin-bottom: 5px;">
+              {{ field.label }}
+              {% if field.field.required %}<span style="color: #dc3545;">*</span>{% endif %}
+            </label>
+            
+            {% if field.name == 'description' %}
+              <textarea name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-textarea" style="border-radius: 10px; min-height: 60px; font-size: 14px;">{{ field.value|default:'' }}</textarea>
+            {% elif field.name == 'opening_time' or field.name == 'closing_time' %}
+              <input type="time" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-input" style="border-radius: 10px; font-size: 14px; padding: 8px;" value="{{ field.value|default:'' }}">
+            {% elif field.name == 'image' %}
+              <div class="photo-upload-section">
+                <input type="file" name="{{ field.name }}" accept="image/*" id="{{ field.id_for_label }}" style="display: none;" onchange="showSelectedFile(this)">
+                <button type="button" class="add-photo-btn" onclick="document.getElementById('{{ field.id_for_label }}').click()">+ Add Photo</button>
+                <div id="selected-file" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+              </div>
+            {% else %}
+              <input type="{{ field.field.widget.input_type|default:'text' }}" name="{{ field.name }}" id="{{ field.id_for_label }}" class="form-input" style="border-radius: 10px; font-size: 14px; padding: 8px;" value="{{ field.value|default:'' }}" {% if field.field.required %}required{% endif %}>
+            {% endif %}
+            
+            {% if field.errors %}
+              <p class="error-text small-text">{{ field.errors.0 }}</p>
+            {% endif %}
+            {% if field.help_text %}
+              <p class="small-text" style="color: #666; margin-top: 3px; font-size: 12px;">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+        {% endif %}
       {% endfor %}
 
-      <!-- Location Section -->
-      <div class="form-group">
-        <label class="form-label">📍 Cafe Location</label>
-        <div class="search-box" style="margin-bottom: 15px;">
-          <input type="text" id="address-search" class="search-input" placeholder="Search for an address...">
-          <button type="button" id="address-search-btn" class="search-btn">Search</button>
+      <!-- Amenities Section - All in one row -->
+      <div class="form-group" style="margin-bottom: 15px;">
+        <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Amenities Available</label>
+        <div class="amenities-row">
+          <div class="amenity-checkbox">
+            <input type="checkbox" name="has_wifi" id="id_has_wifi" {% if form.has_wifi.value %}checked{% endif %} style="width: 16px; height: 16px;">
+            <label for="id_has_wifi" style="font-size: 14px;">🛜 WiFi</label>
+          </div>
+          <div class="amenity-checkbox">
+            <input type="checkbox" name="has_power_outlet" id="id_has_power_outlet" {% if form.has_power_outlet.value %}checked{% endif %} style="width: 16px; height: 16px;">
+            <label for="id_has_power_outlet" style="font-size: 14px;">🔌 Outlets</label>
+          </div>
+          <div class="amenity-checkbox">
+            <input type="checkbox" name="has_restroom" id="id_has_restroom" {% if form.has_restroom.value %}checked{% endif %} style="width: 16px; height: 16px;">
+            <label for="id_has_restroom" style="font-size: 14px;">🚻 Restroom</label>
+          </div>
         </div>
-        <div id="resolved-address" style="padding: 10px; background-color: #f8f8f8; border-radius: 5px; margin-bottom: 15px; font-style: italic; color: #555;"></div>
-        <div id="map" class="map-element" style="height: 400px; border-radius: 10px; overflow: hidden;"></div>
-      </div>
+        </div>
 
-      <div style="display: flex; gap: 15px; margin-top: 30px;">
-        <button type="submit" class="form-submit" style="flex: 1;">
-          {% if form.instance.pk %}Update Cafe{% else %}Add Cafe{% endif %}
-        </button>
-        <a href="{% url 'cafe-list' %}" class="action-btn" style="background-color: #666; color: white; flex: 0 0 auto;">Cancel</a>
-      </div>
-    </form>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="review-submit-btn" style="flex: 1;">
+            {% if form.instance.pk %}Update Cafe{% else %}Add Cafe{% endif %}
+          </button>
+          <a href="{% url 'cafe-list' %}" class="back-to-list-btn" style="padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; flex: 0 0 auto;">Cancel</a>
+        </div>
+      </form>
+    </div>
   </div>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -152,5 +175,15 @@
     }
 
     window.onload = initMap;
+
+    // Show selected file name for photo upload
+    function showSelectedFile(input) {
+      const fileDisplay = document.getElementById('selected-file');
+      if (input.files && input.files[0]) {
+        fileDisplay.textContent = '📁 ' + input.files[0].name;
+      } else {
+        fileDisplay.textContent = '';
+      }
+    }
   </script>
 {% endblock %}
