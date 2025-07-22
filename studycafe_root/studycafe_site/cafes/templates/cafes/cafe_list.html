@@ -12,17 +12,19 @@
       <div class="filter-section">
         <div class="filter-item">
           <input type="checkbox" name="wifi" id="wifi" class="filter-checkbox" {% if request.GET.wifi %}checked{% endif %}>
-          <label for="wifi" class="filter-label">📶 WiFi</label>
+          <label for="wifi" class="filter-label">🛜 WiFi</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" name="power" id="power" class="filter-checkbox" {% if request.GET.power %}checked{% endif %}>
-          <label for="power" class="filter-label">🔌 Power Outlets</label>
+          <label for="power" class="filter-label">🔌 Outlets</label>
         </div>
         <div class="filter-item">
           <input type="checkbox" name="restroom" id="restroom" class="filter-checkbox" {% if request.GET.restroom %}checked{% endif %}>
           <label for="restroom" class="filter-label">🚻 Restroom</label>
         </div>
-        <a href="{% url 'cafe-list' %}" class="action-btn btn-edit">Reset Filters</a>
+        <div class="filter-item">
+          <a href="{% url 'cafe-list' %}" class="filter-reset">Reset Filters</a>
+        </div>
       </div>
     </form>
   </div>

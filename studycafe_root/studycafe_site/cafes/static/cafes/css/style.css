@@ -288,6 +288,18 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 16px;
 }
 
+.filter-reset {
+  color: #D2691E;
+  font-size: 16px;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.filter-reset:hover {
+  color: #B8541A;
+  text-decoration: underline;
+}
+
 /* ===== FORMS ===== */
 .form-container {
   background-color: #fff;
