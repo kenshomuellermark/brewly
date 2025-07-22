@@ -1,35 +1,62 @@
 {% extends "base.html" %}
 {% block content %}
-  <div class="form-container">
-    <h2 class="form-title">Welcome Back!</h2>
-    <p class="text-center mb-30" style="color: #666;">Login to discover the best study cafes</p>
-    
-    <form method="post">
-      {% csrf_token %}
-      <div class="form-group">
-        <label for="id_username" class="form-label">Username</label>
-        <input type="text" name="username" class="form-input" required id="id_username" autofocus>
-      </div>
+  <div class="edit-profile-container">
+    <div class="edit-section">
+      <h3 style="margin: 0 0 30px 0; font-size: 24px; text-align: center; color: #6F4E37;">Welcome Back!</h3>
+      <p style="text-align: center; color: #666; margin-bottom: 30px;">Login to discover the best study cafes</p>
       
-      <div class="form-group">
-        <label for="id_password" class="form-label">Password</label>
-        <input type="password" name="password" class="form-input" required id="id_password">
-      </div>
-      
-      {% if form.errors %}
-        <div class="alert alert-error">
-          Please check your username and password.
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Username</label>
+          <input type="text" name="username" id="id_username" required autofocus>
         </div>
-      {% endif %}
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Password</label>
+          <input type="password" name="password" id="id_password" required>
+        </div>
+        
+        {% if form.errors %}
+          <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            <p style="margin: 0;">Please check your username and password.</p>
+          </div>
+        {% endif %}
+        
+        <button type="submit" class="review-submit-btn" style="width: 100%; margin-bottom: 20px;">Login</button>
+      </form>
       
-      <button type="submit" class="form-submit">Login</button>
-    </form>
-    
-    <p class="text-center mt-30">
-      Don't have an account? <a href="{% url 'register' %}">Sign up here</a>
-    </p>
-    <p class="text-center">
-      <a href="{% url 'password_reset' %}">Forgot your password?</a>
-    </p>
+      <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+        <p style="color: #666; margin: 0 0 10px 0;">Don't have an account? <a href="{% url 'register' %}" style="color: #6F4E37; font-weight: 500;">Sign up here</a></p>
+        <p style="color: #666; margin: 0;"><a href="{% url 'password_reset' %}" style="color: #6F4E37; font-weight: 500;">Forgot your password?</a></p>
+      </div>
+    </div>
   </div>
+
+  <style>
+    /* Style the login form inputs to match the registration page */
+    #id_username,
+    #id_password {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    #id_username:focus,
+    #id_password:focus {
+      outline: none;
+      border-color: #6F4E37;
+    }
+    
+    /* Custom styling for the form container */
+    .edit-profile-container {
+      max-width: 500px;
+      margin: 50px auto;
+    }
+  </style>
 {% endblock %}

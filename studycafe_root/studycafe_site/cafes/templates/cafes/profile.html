@@ -2,8 +2,8 @@
 {% block content %}
   <div class="profile-container">
     <div class="profile-header">
-      {% if profile_user.profile.image %}
-        <img src="{{ profile_user.profile.image.url }}" alt="Profile picture" class="profile-picture">
+      {% if profile_user.profile.profile_pic %}
+        <img src="{{ profile_user.profile.profile_pic.url }}" alt="Profile picture" class="profile-picture">
       {% else %}
         <div class="profile-picture" style="background-color: #F5E6D3; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #6F4E37;">
           {{ profile_user.username|first|upper }}

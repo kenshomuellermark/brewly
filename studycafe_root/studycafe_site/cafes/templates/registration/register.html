@@ -1,10 +1,79 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Register</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Sign Up</button>
-  </form>
-  <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+  <div class="edit-profile-container">
+    <div class="edit-section">
+      <h3 style="margin: 0 0 30px 0; font-size: 24px; text-align: center; color: #6F4E37;">Join Brewly</h3>
+      <p style="text-align: center; color: #666; margin-bottom: 30px;">Discover and share amazing study cafes</p>
+      
+      <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Username</label>
+          {{ form.username }}
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Email</label>
+          {{ form.email }}
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Password</label>
+          {{ form.password1 }}
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Confirm Password</label>
+          {{ form.password2 }}
+        </div>
+        
+        {% if form.errors %}
+          <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; color: #721c24; padding: 15px; margin-bottom: 20px; border-radius: 5px;">
+            {% for field, errors in form.errors.items %}
+              {% for error in errors %}
+                <p style="margin: 0;">{{ error }}</p>
+              {% endfor %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        
+        <button type="submit" class="review-submit-btn" style="width: 100%; margin-bottom: 20px;">Create Account</button>
+      </form>
+      
+      <div style="text-align: center; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+        <p style="color: #666; margin: 0;">Already have an account? <a href="{% url 'login' %}" style="color: #6F4E37; font-weight: 500;">Login here</a></p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    /* Style the registration form inputs to match the design */
+    #id_username,
+    #id_email,
+    #id_password1,
+    #id_password2 {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e5e5;
+      border-radius: 10px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    #id_username:focus,
+    #id_email:focus,
+    #id_password1:focus,
+    #id_password2:focus {
+      outline: none;
+      border-color: #6F4E37;
+    }
+    
+    /* Custom styling for the form container */
+    .edit-profile-container {
+      max-width: 500px;
+      margin: 50px auto;
+    }
+  </style>
 {% endblock %}
