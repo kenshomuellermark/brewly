@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Brewly - Premium Study Cafés{% endblock %}</title>
+  
+  <!-- Preload critical resources -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS -->
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'cafes/css/style-optimized.css' %}">
+  
+  <!-- Meta tags for better SEO -->
+  <meta name="description" content="{% block meta_description %}Discover the perfect study cafés with WiFi, power outlets, and great coffee. Find your ideal workspace with Brewly.{% endblock %}">
+  <meta name="keywords" content="study café, coffee shop, workspace, WiFi, students, remote work">
+  <meta property="og:title" content="{% block og_title %}Brewly - Premium Study Cafés{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Find the perfect study spot with our curated selection of premium cafés{% endblock %}">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
+  
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="nav-brand">
+          <a href="{% url 'home' %}" style="color: var(--accent-gold); text-decoration: none;">
+            ☕ Brewly
+          </a>
+        </div>
+        <ul class="nav-links">
+          <li><a href="{% url 'home' %}">Discover</a></li>
+          <li><a href="{% url 'map' %}">Map View</a></li>
+          {% if user.is_authenticated %}
+            <li><a href="{% url 'cafe-create' %}" class="btn-primary" style="margin: 0;">+ Add Café</a></li>
+          {% endif %}
+        </ul>
+      </div>
+      
+      <div class="nav-right">
+        <!-- Theme Toggle -->
+        <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+          <span class="theme-icon">🌙</span>
+          <span class="theme-text">Dark</span>
+        </button>
+        
+        {% if user.is_authenticated %}
+          <div class="user-menu">
+            <span style="color: var(--cream); font-weight: 500;">
+              Welcome, {{ user.first_name|default:user.username }}! 
+            </span>
+            <a href="{% url 'profile' %}" style="color: var(--accent-gold); margin: 0 16px;">Profile</a>
+            <form method="post" action="{% url 'logout' %}" style="display: inline;">
+              {% csrf_token %}
+              <button type="submit" class="logout-btn">Logout</button>
+            </form>
+          </div>
+        {% else %}
+          <div class="auth-links">
+            <a href="{% url 'login' %}" style="color: var(--cream); margin-right: 16px;">Login</a>
+            <a href="{% url 'register' %}" class="btn-primary" style="margin: 0;">Join Brewly</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- Messages -->
+  {% if messages %}
+    <div class="messages-container">
+      {% for message in messages %}
+        <div class="message glass-card message-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} fade-in-up">
+          <div class="message-content">
+            {% if message.tags == 'success' %}
+              <span class="message-icon">✅</span>
+            {% elif message.tags == 'error' %}
+              <span class="message-icon">❌</span>
+            {% elif message.tags == 'warning' %}
+              <span class="message-icon">⚠️</span>
+            {% else %}
+              <span class="message-icon">ℹ️</span>
+            {% endif %}
+            {{ message }}
+          </div>
+          <button class="message-close" onclick="this.parentElement.remove()">&times;</button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main class="main-container">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer glass" style="margin-top: 80px; padding: 40px 0; text-align: center; border-top: 1px solid var(--border);">
+    <div class="footer-container" style="max-width: 1400px; margin: 0 auto; padding: 0 24px;">
+      <div style="margin-bottom: 20px;">
+        <span style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 24px; color: var(--accent-gold);">☕ Brewly</span>
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 16px;">
+        Discover premium study cafés with the perfect ambiance for productivity
+      </p>
+      <div style="display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;">
+        <a href="#" style="color: var(--text-secondary); text-decoration: none;">About</a>
+        <a href="#" style="color: var(--text-secondary); text-decoration: none;">Contact</a>
+        <a href="#" style="color: var(--text-secondary); text-decoration: none;">Privacy</a>
+        <a href="#" style="color: var(--text-secondary); text-decoration: none;">Terms</a>
+      </div>
+      <p style="color: var(--text-secondary); font-size: 14px; margin-top: 20px;">
+        © 2024 Brewly. Crafted with ❤️ for coffee lovers and students.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Theme Toggle Functionality
+    function toggleTheme() {
+      const html = document.documentElement;
+      const currentTheme = html.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      
+      html.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      
+      // Update toggle button
+      const themeIcon = document.querySelector('.theme-icon');
+      const themeText = document.querySelector('.theme-text');
+      
+      if (newTheme === 'dark') {
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Light';
+      } else {
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Dark';
+      }
+    }
+
+    // Load saved theme
+    document.addEventListener('DOMContentLoaded', function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+      // Update toggle button state
+      const themeIcon = document.querySelector('.theme-icon');
+      const themeText = document.querySelector('.theme-text');
+      
+      if (savedTheme === 'dark') {
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Light';
+      }
+    });
+
+    // Auto-dismiss messages
+    document.addEventListener('DOMContentLoaded', function() {
+      const messages = document.querySelectorAll('.message');
+      messages.forEach(function(message) {
+        setTimeout(function() {
+          message.style.opacity = '0';
+          message.style.transform = 'translateY(-20px)';
+          setTimeout(function() {
+            message.remove();
+          }, 300);
+        }, 5000);
+      });
+    });
+
+    // Smooth scroll for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+
+    // Add loading states to forms
+    document.addEventListener('DOMContentLoaded', function() {
+      const forms = document.querySelectorAll('form');
+      forms.forEach(function(form) {
+        form.addEventListener('submit', function() {
+          const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="loading"><div class="spinner"></div>Processing...</div>';
+          }
+        });
+      });
+    });
+  </script>
+
+  {% block extra_scripts %}{% endblock %}
+</body>
+</html>
