@@ -39,6 +39,44 @@
     {% endfor %}
   </ul>
 
+  <h3>Followers ({{ followers.count }})</h3>
+  <ul class="followers-list">
+    {% for follow in followers %}
+      <li>
+        {{ follow.follower.username }}
+        {% if user == profile_user and user != follow.follower %}
+          {% if follow.follower in user.following.all|default:default %}
+            <span class="following-badge">Following</span>
+          {% else %}
+            <form action="{% url 'follow-user' follow.follower.id %}" method="post" class="follow-form">
+              {% csrf_token %}
+              <button type="submit" class="follow-btn">Follow back</button>
+            </form>
+          {% endif %}
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>No followers yet.</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Following ({{ following.count }})</h3>
+  <ul class="following-list">
+    {% for follow in following %}
+      <li>
+        {{ follow.following.username }}
+        {% if user == profile_user %}
+          <form action="{% url 'unfollow-user' follow.following.id %}" method="post" class="unfollow-form">
+            {% csrf_token %}
+            <button type="submit" class="unfollow-btn">Unfollow</button>
+          </form>
+        {% endif %}
+      </li>
+    {% empty %}
+      <li>Not following anyone yet.</li>
+    {% endfor %}
+  </ul>
+
   {% if user == profile_user %}
     <a href="{% url 'edit_profile' %}">Edit Profile</a>
   {% endif %}

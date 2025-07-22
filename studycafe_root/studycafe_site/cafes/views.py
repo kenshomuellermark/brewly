@@ -6,8 +6,8 @@ from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.urls import reverse_lazy
 from django.http import HttpResponseRedirect
 from django.contrib import messages
-from .models import Cafe, Rating
-from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm
+from .models import Cafe, Rating, CafePhoto, Follow
+from .forms import UserRegisterForm, UserUpdateForm, ProfileUpdateForm, CafePhotoForm
 from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.auth.forms import PasswordChangeForm
@@ -53,6 +53,8 @@ class CafeDetailView(DetailView):
         context['is_bookmarked'] = False
         if user.is_authenticated:
             context['is_bookmarked'] = cafe.bookmarked_by.filter(user=user).exists()
+        context['photos'] = cafe.photos.all()
+        context['photo_form'] = CafePhotoForm()
         return context
 
 def register(request):
@@ -160,6 +162,9 @@ class UserProfileView(DetailView):
         context['ratings'] = self.request.user.rating_set.all()
         # Add bookmarks
         context['bookmarked_cafes'] = [bookmark.cafe for bookmark in self.request.user.bookmarks.all()]
+        # Add followers and following
+        context['followers'] = self.request.user.followers.all()
+        context['following'] = self.request.user.following.all()
         return context
 
 @login_required
@@ -225,4 +230,68 @@ class MapView(TemplateView):
         )
         context['cafes'] = cafes_with_location
         return context
+
+
+# Photo gallery views
+@login_required
+def add_photo(request, cafe_id):
+    cafe = get_object_or_404(Cafe, id=cafe_id)
+    
+    if request.method == 'POST':
+        form = CafePhotoForm(request.POST, request.FILES)
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.cafe = cafe
+            photo.uploaded_by = request.user
+            photo.save()
+            messages.success(request, 'Photo added successfully!')
+        else:
+            messages.error(request, 'Please provide a valid image.')
+    
+    return redirect('cafe-detail', pk=cafe_id)
+
+
+@login_required
+def delete_photo(request, photo_id):
+    photo = get_object_or_404(CafePhoto, id=photo_id)
+    cafe_id = photo.cafe.id
+    
+    # Only allow the uploader or the cafe owner to delete
+    if request.user == photo.uploaded_by or request.user == photo.cafe.posted_by:
+        photo.delete()
+        messages.success(request, 'Photo deleted successfully!')
+    else:
+        messages.error(request, 'You do not have permission to delete this photo.')
+    
+    return redirect('cafe-detail', pk=cafe_id)
+
+
+# Follow/Unfollow views
+@login_required
+def follow_user(request, user_id):
+    user_to_follow = get_object_or_404(User, id=user_id)
+    
+    if request.user != user_to_follow:
+        Follow.objects.get_or_create(
+            follower=request.user,
+            following=user_to_follow
+        )
+        messages.success(request, f'You are now following {user_to_follow.username}!')
+    else:
+        messages.error(request, 'You cannot follow yourself.')
+    
+    return redirect('profile')
+
+
+@login_required
+def unfollow_user(request, user_id):
+    user_to_unfollow = get_object_or_404(User, id=user_id)
+    
+    Follow.objects.filter(
+        follower=request.user,
+        following=user_to_unfollow
+    ).delete()
+    
+    messages.success(request, f'You have unfollowed {user_to_unfollow.username}.')
+    return redirect('profile')
 

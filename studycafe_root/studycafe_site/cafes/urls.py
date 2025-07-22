@@ -23,4 +23,10 @@ urlpatterns = [
     path('cafe/<int:cafe_id>/bookmark/', views.add_bookmark, name='add-bookmark'),
     path('cafe/<int:cafe_id>/unbookmark/', views.remove_bookmark, name='remove-bookmark'),
     path('map/', MapView.as_view(), name='map'),
+    # Photo gallery
+    path('cafe/<int:cafe_id>/photo/add/', views.add_photo, name='add-photo'),
+    path('photo/<int:photo_id>/delete/', views.delete_photo, name='delete-photo'),
+    # Follow/Unfollow
+    path('user/<int:user_id>/follow/', views.follow_user, name='follow-user'),
+    path('user/<int:user_id>/unfollow/', views.unfollow_user, name='unfollow-user'),
 ]

@@ -1,6 +1,21 @@
 {% extends "base.html" %}
 {% block content %}
   <h1>{{ cafe.name }}</h1>
+  <p><strong>Posted by:</strong> {{ cafe.posted_by.username }}
+    {% if user.is_authenticated and user != cafe.posted_by %}
+      {% if cafe.posted_by in user.following.values_list.following %}
+        <form action="{% url 'unfollow-user' cafe.posted_by.id %}" method="post" class="inline-form">
+          {% csrf_token %}
+          <button type="submit" class="unfollow-btn">Unfollow</button>
+        </form>
+      {% else %}
+        <form action="{% url 'follow-user' cafe.posted_by.id %}" method="post" class="inline-form">
+          {% csrf_token %}
+          <button type="submit" class="follow-btn">Follow</button>
+        </form>
+      {% endif %}
+    {% endif %}
+  </p>
   <p><strong>Address:</strong> {{ cafe.address }}</p>
   <p><strong>Description:</strong> {{ cafe.description }}</p>
   <p><strong>WiFi:</strong> {{ cafe.has_wifi|yesno:"Yes,No" }}</p>
@@ -17,6 +32,37 @@
   {% endif %}
   {% if cafe.photo %}
     <img src="{{ cafe.photo.url }}" alt="Cafe photo" style="max-width:300px;">
+  {% endif %}
+
+  <!-- Photo Gallery -->
+  <h3>Photo Gallery</h3>
+  <div class="photo-gallery">
+    {% for photo in photos %}
+      <div class="photo-item">
+        <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" class="gallery-image">
+        {% if photo.caption %}
+          <p class="photo-caption">{{ photo.caption }}</p>
+        {% endif %}
+        <p class="photo-credit">by {{ photo.uploaded_by.username }}</p>
+        {% if user == photo.uploaded_by or user == cafe.posted_by %}
+          <form action="{% url 'delete-photo' photo.id %}" method="post" class="delete-photo-form">
+            {% csrf_token %}
+            <button type="submit" class="delete-photo-btn">×</button>
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p>No photos yet. Be the first to add one!</p>
+    {% endfor %}
+  </div>
+
+  {% if user.is_authenticated %}
+    <h4>Add a Photo</h4>
+    <form action="{% url 'add-photo' cafe.id %}" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ photo_form.as_p }}
+      <button type="submit">Upload Photo</button>
+    </form>
   {% endif %}
 
   <!-- map integration -->

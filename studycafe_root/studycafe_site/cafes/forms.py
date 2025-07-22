@@ -1,8 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
-from .models import Profile
-from .models import Cafe
+from .models import Profile, Cafe, CafePhoto
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -37,4 +36,13 @@ class CafeForm(forms.ModelForm):
             'longitude': forms.HiddenInput(),
             'opening_time': forms.TimeInput(attrs={'type': 'time'}),
             'closing_time': forms.TimeInput(attrs={'type': 'time'}),
+        }
+
+
+class CafePhotoForm(forms.ModelForm):
+    class Meta:
+        model = CafePhoto
+        fields = ['image', 'caption']
+        widgets = {
+            'caption': forms.TextInput(attrs={'placeholder': 'Add a caption (optional)'})
         }
