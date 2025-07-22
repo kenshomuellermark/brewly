@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>Study Cafes Near You</h1>
+  
+  <!-- Search and filter controls -->
+  <div style="margin-bottom: 1em;">
+    <input type="text" id="address-search" placeholder="Search by address">
+    <button type="button" id="address-search-btn">Search</button>
+    <button type="button" id="use-my-location">Use My Location</button>
+  </div>
+  
+  <!-- Map container -->
+  <div id="map" style="height: 500px; width: 100%; border: 1px solid #ccc;"></div>
+  
+  <!-- Cafe list below map -->
+  <div id="cafe-list" style="margin-top: 1em;">
+    <h3>Nearby Cafes</h3>
+    <div id="cafe-results"></div>
+    <a href="{% url 'cafe-create' %}" class="btn btn-primary" style="display:inline-block; margin-top:1em;">Add New Cafe</a>
+  </div>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    var map;
+    var userMarker;
+    var cafeMarkers = [];
+    var userLat = null;
+    var userLng = null;
+
+    // Initialize map
+    function initMap() {
+      map = L.map('map').setView([40.7128, -74.0060], 13); // Default to NYC
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Add cafes to map
+      addCafesToMap();
+      
+      // Try to get user location
+      getUserLocation();
+    }
+
+    // Add all cafes as markers
+    function addCafesToMap() {
+      var cafes = [
+        {% for cafe in cafes %}
+          {
+            id: {{ cafe.id }},
+            name: "{{ cafe.name|escapejs }}",
+            address: "{{ cafe.address|escapejs }}",
+            lat: {{ cafe.latitude }},
+            lng: {{ cafe.longitude }},
+            has_wifi: {{ cafe.has_wifi|yesno:"true,false" }},
+            has_power: {{ cafe.has_power_outlet|yesno:"true,false" }},
+            has_restroom: {{ cafe.has_restroom|yesno:"true,false" }}
+          },
+        {% endfor %}
+      ];
+
+      cafes.forEach(function(cafe) {
+        var marker = L.marker([cafe.lat, cafe.lng]).addTo(map);
+        
+        // Create popup content
+        var popupContent = `
+          <strong>${cafe.name}</strong><br>
+          ${cafe.address}<br>
+          ${cafe.has_wifi ? '📶 WiFi' : ''} 
+          ${cafe.has_power ? '🔌 Power' : ''} 
+          ${cafe.has_restroom ? '🚻 Restroom' : ''}<br>
+          <a href="/cafes/cafe/${cafe.id}/">View Details</a>
+        `;
+        
+        marker.bindPopup(popupContent);
+        cafeMarkers.push(marker);
+      });
+    }
+
+    // Get user's location
+    function getUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          userLat = position.coords.latitude;
+          userLng = position.coords.longitude;
+          
+          // Center map on user location
+          map.setView([userLat, userLng], 15);
+          
+          // Add user marker
+          if (userMarker) {
+            map.removeLayer(userMarker);
+          }
+          userMarker = L.marker([userLat, userLng], {
+            icon: L.divIcon({
+              className: 'user-marker',
+              html: '📍',
+              iconSize: [30, 30]
+            })
+          }).addTo(map);
+          userMarker.bindPopup('You are here!');
+          
+          // Show nearby cafes
+          showNearbyCafes();
+        }, function() {
+          console.log('Could not get user location');
+        });
+      }
+    }
+
+    // Show cafes sorted by distance
+    function showNearbyCafes() {
+      if (!userLat || !userLng) return;
+      
+      var cafes = [
+        {% for cafe in cafes %}
+          {
+            id: {{ cafe.id }},
+            name: "{{ cafe.name|escapejs }}",
+            address: "{{ cafe.address|escapejs }}",
+            lat: {{ cafe.latitude }},
+            lng: {{ cafe.longitude }},
+            distance: 0
+          },
+        {% endfor %}
+      ];
+
+      // Calculate distances
+      cafes.forEach(function(cafe) {
+        cafe.distance = getDistance(userLat, userLng, cafe.lat, cafe.lng);
+      });
+
+      // Sort by distance
+      cafes.sort(function(a, b) {
+        return a.distance - b.distance;
+      });
+
+      // Display in list
+      var resultsDiv = document.getElementById('cafe-results');
+      resultsDiv.innerHTML = '';
+      
+      cafes.slice(0, 10).forEach(function(cafe) { // Show top 10
+        var cafeDiv = document.createElement('div');
+        cafeDiv.innerHTML = `
+          <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0;">
+            <strong>${cafe.name}</strong><br>
+            ${cafe.address}<br>
+            <small>${cafe.distance.toFixed(1)} km away</small>
+            <a href="/cafes/cafe/${cafe.id}/">View Details</a>
+          </div>
+        `;
+        resultsDiv.appendChild(cafeDiv);
+      });
+    }
+
+    // Calculate distance between two points
+    function getDistance(lat1, lon1, lat2, lon2) {
+      var R = 6371; // Radius of the earth in km
+      var dLat = deg2rad(lat2 - lat1);
+      var dLon = deg2rad(lon2 - lon1);
+      var a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      var d = R * c; // Distance in km
+      return d;
+    }
+
+    function deg2rad(deg) {
+      return deg * (Math.PI/180);
+    }
+
+    // Search functionality
+    function searchAddress() {
+      var address = document.getElementById('address-search').value;
+      fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.length > 0) {
+            var lat = parseFloat(data[0].lat);
+            var lon = parseFloat(data[0].lon);
+            map.setView([lat, lon], 15);
+            
+            // Update user location
+            userLat = lat;
+            userLng = lon;
+            
+            if (userMarker) {
+              map.removeLayer(userMarker);
+            }
+            userMarker = L.marker([lat, lon], {
+              icon: L.divIcon({
+                className: 'user-marker',
+                html: '📍',
+                iconSize: [30, 30]
+              })
+            }).addTo(map);
+            userMarker.bindPopup('Search location');
+            
+            showNearbyCafes();
+          } else {
+            alert('Address not found!');
+          }
+        });
+    }
+
+    // Event listeners
+    document.getElementById('address-search').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchAddress();
+      }
+    });
+
+    document.getElementById('address-search-btn').addEventListener('click', searchAddress);
+    document.getElementById('use-my-location').addEventListener('click', getUserLocation);
+
+    // Initialize when page loads
+    window.onload = initMap;
+  </script>
+
+  <style>
+    .user-marker {
+      background: none;
+      border: none;
+    }
+  </style>
+{% endblock %}

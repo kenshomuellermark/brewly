@@ -6,8 +6,56 @@
   <p><strong>WiFi:</strong> {{ cafe.has_wifi|yesno:"Yes,No" }}</p>
   <p><strong>Power Outlets:</strong> {{ cafe.has_power_outlet|yesno:"Yes,No" }}</p>
   <p><strong>Restroom:</strong> {{ cafe.has_restroom|yesno:"Yes,No" }}</p>
+  {% if cafe.opening_time and cafe.closing_time %}
+    <p><strong>Hours:</strong> {{ cafe.opening_time|time:"g:i A" }} - {{ cafe.closing_time|time:"g:i A" }}
+    {% if cafe.is_open_now %}
+      <span style="color: green;">🕐 Open now</span>
+    {% elif cafe.is_open_now == False %}
+      <span style="color: red;">🕐 Closed</span>
+    {% endif %}
+    </p>
+  {% endif %}
   {% if cafe.photo %}
     <img src="{{ cafe.photo.url }}" alt="Cafe photo" style="max-width:300px;">
+  {% endif %}
+
+  <!-- map integration -->
+  {% if cafe.latitude and cafe.longitude %}
+    <h3>Location</h3>
+    <div id="map" style="height: 300px; margin-bottom: 1em; border: 1px solid #ccc;"></div>
+    <div id="resolved-address" style="margin: 0.5em 0; color: #555; font-style: italic;"></div>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      var lat = {{ cafe.latitude }};
+      var lon = {{ cafe.longitude }};
+      var map = L.map('map').setView([lat, lon], 16);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap contributors'
+      }).addTo(map);
+      
+      // Add a custom marker with cafe name
+      var marker = L.marker([lat, lon]).addTo(map);
+      marker.bindPopup('<strong>{{ cafe.name|escapejs }}</strong><br>{{ cafe.address|escapejs }}').openPopup();
+
+      // Show the full address below the map
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.display_name) {
+            document.getElementById('resolved-address').textContent = data.display_name;
+          } else {
+            document.getElementById('resolved-address').textContent = '{{ cafe.address }}';
+          }
+        })
+        .catch(error => {
+          document.getElementById('resolved-address').textContent = '{{ cafe.address }}';
+        });
+    </script>
+  {% else %}
+    <p><em>Location not available for this cafe.</em></p>
   {% endif %}
   <p>
     <!-- so that only users who posted can edit the cafe -->
@@ -18,7 +66,7 @@
     <a href="{% url 'cafe-list' %}">Back to list</a>
   </p>
   <hr>
-  <h2>Ratings</h2>
+  <h2>Ratings{% if cafe.average_rating > 0 %} (Average: ⭐ {{ cafe.average_rating|floatformat:1 }}/5){% endif %}</h2>
   <ul>
     {% for rating in cafe.ratings.all %}
       <li>

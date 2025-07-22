@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import DetailView
 from .views import UserProfileView
+from .views import MapView
 
 urlpatterns = [
     path('', views.CafeListView.as_view(), name='home'),
@@ -21,4 +22,5 @@ urlpatterns = [
     path('change-password/', views.custom_password_change, name='custom_password_change'),
     path('cafe/<int:cafe_id>/bookmark/', views.add_bookmark, name='add-bookmark'),
     path('cafe/<int:cafe_id>/unbookmark/', views.remove_bookmark, name='remove-bookmark'),
+    path('map/', MapView.as_view(), name='map'),
 ]

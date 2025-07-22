@@ -9,12 +9,21 @@
     <button type="submit">Search/Filter</button>
     <a href="{% url 'cafe-list' %}">Reset</a>
   </form>
-  <a href="{% url 'cafe-create' %}">Add New Cafe</a>
+  <a href="{% url 'cafe-create' %}">Add New Cafe</a> | 
+  <a href="{% url 'map' %}">View Map</a>
   <ul>
     {% for cafe in cafes %}
       <li>
         <a href="{% url 'cafe-detail' cafe.pk %}">{{ cafe.name }}</a>
         ({{ cafe.address }})
+        {% if cafe.average_rating > 0 %}
+          | ⭐ {{ cafe.average_rating|floatformat:1 }}/5
+        {% endif %}
+        {% if cafe.is_open_now == True %}
+          | 🕐 Open
+        {% elif cafe.is_open_now == False %}
+          | 🕐 Closed
+        {% endif %}
         {% if cafe.has_wifi %} | WiFi{% endif %}
         {% if cafe.has_power_outlet %} | Power{% endif %}
         {% if cafe.has_restroom %} | Restroom{% endif %}

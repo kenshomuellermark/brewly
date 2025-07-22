@@ -2,6 +2,7 @@ from django.db.models.signals import post_save
 from django.db import models
 from django.dispatch import receiver
 from django.contrib.auth.models import User
+from datetime import datetime
 
 # Create your models here.
 class Cafe(models.Model):
@@ -14,6 +15,29 @@ class Cafe(models.Model):
     has_restroom = models.BooleanField(default=False)
     posted_by = models.ForeignKey(User, on_delete=models.CASCADE)
     posted_at = models.DateTimeField(auto_now_add=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    opening_time = models.TimeField(null=True, blank=True)
+    closing_time = models.TimeField(null=True, blank=True)
+
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            return sum(r.stars for r in ratings) / len(ratings)
+        return 0
+
+    def is_open_now(self):
+        if not self.opening_time or not self.closing_time:
+            return None  # Unknown
+        
+        now = datetime.now().time()
+        
+        # Handle normal hours (e.g., 9:00 AM - 6:00 PM)
+        if self.opening_time <= self.closing_time:
+            return self.opening_time <= now <= self.closing_time
+        # Handle overnight hours (e.g., 8:00 PM - 2:00 AM)
+        else:
+            return now >= self.opening_time or now <= self.closing_time
 
     def __str__(self):
         return self.name

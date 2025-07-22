@@ -4,7 +4,108 @@
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     {{ form.as_p }}
+
+    <!-- Address search at the top -->
+    <label for="address-search"><strong>Find address:</strong></label>
+    <input type="text" id="address-search" placeholder="Type address">
+    <button type="button" id="address-search-btn">Search</button>
+    <div id="resolved-address" style="margin: 0.5em 0; color: #555;"></div>
+
+    <div id="map" style="height: 300px; margin-bottom: 1em;"></div>
+
     <button type="submit">Save</button>
   </form>
   <a href="{% url 'cafe-list' %}">Back to list</a>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Helper to reverse geocode lat/lng to address
+    function reverseGeocode(lat, lon) {
+      fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lon)
+        .then(response => response.json())
+        .then(data => {
+          document.getElementById('resolved-address').textContent = data.display_name || '';
+        });
+    }
+
+    // Try to use user's GPS location, else fallback to existing or default
+    function initMap() {
+      var lat = parseFloat(document.querySelector('input[name="latitude"]').value) || null;
+      var lon = parseFloat(document.querySelector('input[name="longitude"]').value) || null;
+
+      function createMap(lat, lon) {
+        var map = L.map('map').setView([lat, lon], 13);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+        var marker = L.marker([lat, lon], {draggable:true}).addTo(map);
+
+        // Update hidden fields and address when marker is dragged
+        marker.on('dragend', function(e) {
+          var latlng = marker.getLatLng();
+          document.querySelector('input[name="latitude"]').value = latlng.lat;
+          document.querySelector('input[name="longitude"]').value = latlng.lng;
+          reverseGeocode(latlng.lat, latlng.lng);
+        });
+
+        // Geocode address function
+        function geocodeAddress() {
+          var address = document.getElementById('address-search').value;
+          fetch('https://nominatim.openstreetmap.org/search?format=json&q=' + encodeURIComponent(address))
+            .then(response => response.json())
+            .then(data => {
+              if (data && data.length > 0) {
+                var lat = parseFloat(data[0].lat);
+                var lon = parseFloat(data[0].lon);
+                map.setView([lat, lon], 16);
+                marker.setLatLng([lat, lon]);
+                document.querySelector('input[name="latitude"]').value = lat;
+                document.querySelector('input[name="longitude"]').value = lon;
+                reverseGeocode(lat, lon);
+              } else {
+                alert('Address not found!');
+              }
+            });
+        }
+
+        // Search on Enter
+        document.getElementById('address-search').addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            geocodeAddress();
+          }
+        });
+
+        // Search on Button Click
+        document.getElementById('address-search-btn').addEventListener('click', function() {
+          geocodeAddress();
+        });
+
+        // Show address for initial marker
+        reverseGeocode(lat, lon);
+      }
+
+      if (lat && lon) {
+        createMap(lat, lon);
+      } else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var userLat = position.coords.latitude;
+          var userLon = position.coords.longitude;
+          document.querySelector('input[name="latitude"]').value = userLat;
+          document.querySelector('input[name="longitude"]').value = userLon;
+          createMap(userLat, userLon);
+        }, function() {
+          // Fallback to a default location (e.g., New York)
+          document.querySelector('input[name="latitude"]').value = 40.7128;
+          document.querySelector('input[name="longitude"]').value = -74.0060;
+          createMap(40.7128, -74.0060);
+        });
+      } else {
+        document.querySelector('input[name="latitude"]').value = 40.7128;
+        document.querySelector('input[name="longitude"]').value = -74.0060;
+        createMap(40.7128, -74.0060);
+      }
+    }
+
+    window.onload = initMap;
+  </script>
 {% endblock %}

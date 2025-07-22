@@ -14,6 +14,8 @@ from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.db import models
 from .models import Bookmark
+from django.views.generic import TemplateView
+from .forms import CafeForm
 
 class CafeListView(ListView):
     model = Cafe
@@ -71,8 +73,8 @@ from django.contrib.auth.decorators import login_required
 
 class CafeCreateView(LoginRequiredMixin, CreateView):
     model = Cafe
+    form_class = CafeForm
     template_name = 'cafes/cafe_form.html'
-    fields = ['name', 'address', 'description', 'photo', 'has_wifi', 'has_power_outlet', 'has_restroom']
     success_url = reverse_lazy('cafe-list')
     
     def form_valid(self, form):
@@ -82,8 +84,8 @@ class CafeCreateView(LoginRequiredMixin, CreateView):
 
 class CafeUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Cafe
+    form_class = CafeForm
     template_name = 'cafes/cafe_form.html'
-    fields = ['name', 'address', 'description', 'photo', 'has_wifi', 'has_power_outlet', 'has_restroom']
     
     def get_success_url(self):
         messages.success(self.request, 'Cafe updated successfully!')
@@ -207,8 +209,20 @@ def remove_bookmark(request, cafe_id):
     return redirect('cafe-detail', pk=cafe_id)
 
 
-
-# comments
-
-
 # map integration
+# home mapview
+
+class MapView(TemplateView):
+    template_name = 'cafes/map.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get all cafes with coordinates
+        cafes_with_location = Cafe.objects.exclude(
+            latitude__isnull=True
+        ).exclude(
+            longitude__isnull=True
+        )
+        context['cafes'] = cafes_with_location
+        return context
+
