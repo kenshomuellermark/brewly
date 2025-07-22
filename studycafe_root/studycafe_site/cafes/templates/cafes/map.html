@@ -1,22 +1,28 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Study Cafes Near You</h1>
+  <h1 class="text-center mb-30">Find Study Cafes Near You</h1>
   
   <!-- Search and filter controls -->
-  <div style="margin-bottom: 1em;">
-    <input type="text" id="address-search" placeholder="Search by address">
-    <button type="button" id="address-search-btn">Search</button>
-    <button type="button" id="use-my-location">Use My Location</button>
+  <div class="mb-30">
+    <div class="search-box">
+      <input type="text" id="address-search" class="search-input" placeholder="Search by address or location..." style="border-radius: 25px;">
+      <button type="button" id="address-search-btn" class="search-btn" style="border-radius: 25px;">Search</button>
+    </div>
   </div>
   
   <!-- Map container -->
-  <div id="map" style="height: 500px; width: 100%; border: 1px solid #ccc;"></div>
+  <div class="map-container" style="position: relative;">
+    <div id="map" class="map-element" style="height: 500px; border-radius: 15px; overflow: hidden;"></div>
+    <!-- Floating location button -->
+    <button type="button" id="use-my-location" class="map-location-btn">
+      🧭
+    </button>
+  </div>
   
   <!-- Cafe list below map -->
-  <div id="cafe-list" style="margin-top: 1em;">
-    <h3>Nearby Cafes</h3>
+  <div id="cafe-list" class="mt-30">
+    <h3 class="mb-20">Nearby Cafes</h3>
     <div id="cafe-results"></div>
-    <a href="{% url 'cafe-create' %}" class="btn btn-primary" style="display:inline-block; margin-top:1em;">Add New Cafe</a>
   </div>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
@@ -66,12 +72,16 @@
         
         // Create popup content
         var popupContent = `
-          <strong>${cafe.name}</strong><br>
-          ${cafe.address}<br>
-          ${cafe.has_wifi ? '📶 WiFi' : ''} 
-          ${cafe.has_power ? '🔌 Power' : ''} 
-          ${cafe.has_restroom ? '🚻 Restroom' : ''}<br>
-          <a href="/cafes/cafe/${cafe.id}/">View Details</a>
+          <div style="font-family: 'Poppins', sans-serif;">
+            <strong style="font-size: 16px; color: #6F4E37;">${cafe.name}</strong><br>
+            <span style="color: #666;">${cafe.address}</span><br>
+            <div style="margin: 8px 0;">
+              ${cafe.has_wifi ? '<span style="background: #8B6445; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-right: 5px;">🛜 WiFi</span>' : ''}
+              ${cafe.has_power ? '<span style="background: #8B6445; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; margin-right: 5px;">🔌 Outlets</span>' : ''}
+              ${cafe.has_restroom ? '<span style="background: #8B6445; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px;">🚻 Restroom</span>' : ''}
+            </div>
+            <a href="/cafes/cafe/${cafe.id}/" style="background: #6F4E37; color: white; padding: 5px 12px; border-radius: 5px; text-decoration: none; font-size: 14px; display: inline-block; margin-top: 5px;">View Details</a>
+          </div>
         `;
         
         marker.bindPopup(popupContent);
@@ -144,11 +154,15 @@
       cafes.slice(0, 10).forEach(function(cafe) { // Show top 10
         var cafeDiv = document.createElement('div');
         cafeDiv.innerHTML = `
-          <div style="border: 1px solid #ddd; padding: 10px; margin: 5px 0;">
-            <strong>${cafe.name}</strong><br>
-            ${cafe.address}<br>
-            <small>${cafe.distance.toFixed(1)} km away</small>
-            <a href="/cafes/cafe/${cafe.id}/">View Details</a>
+          <div class="cafe-card" style="margin-bottom: 15px;">
+            <div class="cafe-card-body">
+              <h4 class="cafe-card-title">${cafe.name}</h4>
+              <p class="cafe-card-info">📍 ${cafe.address}</p>
+              <div class="cafe-card-meta">
+                <small style="color: #666;">${cafe.distance.toFixed(1)} km away</small>
+                <a href="/cafes/cafe/${cafe.id}/" class="action-btn btn-primary" style="font-size: 14px; padding: 5px 15px;">View Details</a>
+              </div>
+            </div>
           </div>
         `;
         resultsDiv.appendChild(cafeDiv);
@@ -225,6 +239,36 @@
     .user-marker {
       background: none;
       border: none;
+    }
+    
+    .map-location-btn {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background: #6F4E37;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .map-location-btn:hover {
+      background: #5A3E2B;
+      transform: scale(1.1);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+    
+    .map-location-btn:active {
+      transform: scale(0.95);
     }
   </style>
 {% endblock %}
