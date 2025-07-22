@@ -487,7 +487,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .profile-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 30px;
   margin-bottom: 40px;
 }
@@ -518,12 +518,27 @@ h1, h2, h3, h4, h5, h6 {
 
 .profile-stats {
   display: flex;
-  gap: 40px;
-  margin-top: 20px;
+  gap: 30px;
+  margin-left: auto;
 }
 
 .stat-item {
   text-align: center;
+}
+
+.stat-item.clickable {
+  color: inherit;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 8px;
+}
+
+.stat-item.clickable:hover {
+  background: rgba(111, 78, 55, 0.1);
+  text-decoration: none;
+  color: inherit;
 }
 
 .stat-number {
@@ -842,6 +857,156 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(111, 78, 55, 0.05);
 }
 
+/* ===== POSTED BY SECTION ===== */
+.posted-by-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.owner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cafe-action-btn {
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.cafe-action-btn.edit {
+  background: transparent;
+  color: #6F4E37;
+  border: 1px solid #6F4E37;
+}
+
+.cafe-action-btn.edit:hover {
+  background: #6F4E37;
+  color: white;
+  text-decoration: none;
+}
+
+.cafe-action-btn.delete {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.cafe-action-btn.delete:hover {
+  background: #dc3545;
+  color: white;
+  text-decoration: none;
+}
+
+/* ===== IMAGE MODAL ===== */
+.image-modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+  position: relative;
+  margin: auto;
+  padding: 20px;
+  width: 90%;
+  max-width: 800px;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: center;
+}
+
+.modal-content img {
+  max-width: 100%;
+  max-height: 80vh;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  color: white;
+  font-size: 35px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.modal-close:hover {
+  color: #ccc;
+}
+
+.modal-caption {
+  color: white;
+  font-size: 16px;
+  margin-top: 15px;
+  padding: 10px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ===== USER REVIEWS SECTION ===== */
+.reviews-content {
+  width: 100%;
+  margin: 0;
+}
+
+.reviews-content .comment-item {
+  margin-bottom: 0;
+  padding: 20px 0;
+  border-bottom: 1px solid #e5e5e5;
+  background: none;
+}
+
+.reviews-content .comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.reviews-content .comment-author {
+  font-weight: 600;
+  color: #6F4E37;
+  font-size: 16px;
+}
+
+.reviews-content .comment-date {
+  color: #999;
+  font-size: 14px;
+}
+
+.reviews-content .comment-rating {
+  color: #D2691E;
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.reviews-content .comment-text {
+  color: #333;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 15px;
+}
+
 /* ===== GOOGLE MAPS BUTTON ===== */
 .maps-btn {
   display: inline-flex;
@@ -1009,6 +1174,76 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr;
     gap: 20px;
   }
+}
+
+/* ===== PROFILE ACTION BUTTONS ===== */
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
+
+.profile-action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Poppins', sans-serif;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-action-btn.primary {
+  background: #6F4E37;
+  color: white;
+}
+
+.profile-action-btn.primary:hover {
+  background: #5A3E2B;
+  text-decoration: none;
+}
+
+.profile-action-btn.secondary {
+  background: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+.profile-action-btn.secondary:hover {
+  background: #f8f9fa;
+  color: #6F4E37;
+  border-color: #6F4E37;
+  text-decoration: none;
+}
+
+.profile-action-btn.danger {
+  background: transparent;
+  color: #dc3545;
+  border: 1px solid #dc3545;
+}
+
+.profile-action-btn.danger:hover {
+  background: #dc3545;
+  color: white;
+}
+
+/* ===== EDIT PROFILE LAYOUT ===== */
+.edit-profile-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.edit-section {
+  background-color: #fff;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  padding: 30px;
 }
 
 /* ===== REVIEW AND MAP SIDE BY SIDE ===== */

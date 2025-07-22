@@ -1,11 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Edit Profile</h2>
-  <form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ u_form.as_p }}
-    {{ p_form.as_p }}
-    <button type="submit">Update</button>
-  </form>
-  <a href="{% url 'profile' %}">Back to Profile</a>
+  <!-- Back to profile button at the top -->
+  <div class="mb-20">
+    <a href="{% url 'profile' %}" class="back-to-list-btn">← Back to Profile</a>
+  </div>
+
+  <div class="edit-profile-container">
+    <div class="edit-section">
+      <h3 style="margin: 0 0 25px 0; font-size: 18px;">Edit Profile</h3>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Username</label>
+          <input type="text" name="username" id="id_username" class="form-input" style="border-radius: 10px; font-size: 14px; padding: 10px;" value="{{ u_form.username.value|default:'' }}" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Email</label>
+          <input type="email" name="email" id="id_email" class="form-input" style="border-radius: 10px; font-size: 14px; padding: 10px;" value="{{ u_form.email.value|default:'' }}" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Profile Picture</label>
+          <div class="photo-upload-section">
+            <input type="file" name="image" accept="image/*" id="id_image" style="display: none;" onchange="showSelectedFile(this)">
+            <button type="button" class="add-photo-btn" onclick="document.getElementById('id_image').click()">+ Upload Photo</button>
+            <div id="selected-file" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+          </div>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label class="form-label" style="font-size: 14px; margin-bottom: 8px;">Bio</label>
+          <textarea name="bio" id="id_bio" class="form-textarea" style="border-radius: 10px; min-height: 80px; font-size: 14px; padding: 10px;" placeholder="Tell us about yourself...">{{ p_form.bio.value|default:'' }}</textarea>
+        </div>
+        
+        <div style="display: flex; gap: 15px; align-items: center;">
+          <button type="submit" class="review-submit-btn" style="flex: 1;">Update Profile</button>
+          <a href="{% url 'custom_password_change' %}" class="profile-action-btn secondary" style="padding: 10px 15px;">Change Password</a>
+        </div>
+      </form>
+    </div>
+  </div>
 {% endblock %}

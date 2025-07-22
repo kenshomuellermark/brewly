@@ -19,6 +19,19 @@
               Google Maps
             </a>
           </div>
+          
+          <!-- Amenities tags -->
+          <div class="cafe-amenities" style="margin-top: 15px;">
+            {% if cafe.has_wifi %}
+              <span class="amenity-badge">🛜 WiFi Available</span>
+            {% endif %}
+            {% if cafe.has_power_outlet %}
+              <span class="amenity-badge">🔌 Power Outlets</span>
+            {% endif %}
+            {% if cafe.has_restroom %}
+              <span class="amenity-badge">🚻 Restroom</span>
+            {% endif %}
+          </div>
         </div>
         
         <!-- Bookmark button on the right -->
@@ -47,9 +60,15 @@
         {% endif %}
       </div>
       
-      <div class="mt-20">
+      <div class="posted-by-section">
         <span class="small-text">Posted by <strong>{{ cafe.posted_by.username }}</strong></span>
-        {% if user.is_authenticated and user != cafe.posted_by %}
+        
+        {% if user == cafe.posted_by %}
+          <div class="owner-actions">
+            <a href="{% url 'cafe-update' cafe.pk %}" class="cafe-action-btn edit">Edit</a>
+            <a href="{% url 'cafe-delete' cafe.pk %}" class="cafe-action-btn delete">Delete</a>
+          </div>
+        {% elif user.is_authenticated %}
           {% if cafe.posted_by in user.following.values_list.following %}
             <form action="{% url 'unfollow-user' cafe.posted_by.id %}" method="post" style="display: inline;">
               {% csrf_token %}
@@ -70,17 +89,6 @@
         <p style="font-size: 18px; line-height: 1.8; color: #555;">{{ cafe.description }}</p>
       </div>
       
-      <div class="cafe-amenities mb-30">
-        {% if cafe.has_wifi %}
-          <span class="amenity-badge">📶 WiFi Available</span>
-        {% endif %}
-        {% if cafe.has_power_outlet %}
-          <span class="amenity-badge">🔌 Power Outlets</span>
-        {% endif %}
-        {% if cafe.has_restroom %}
-          <span class="amenity-badge">🚻 Restroom</span>
-        {% endif %}
-      </div>
       
       {% if cafe.opening_time and cafe.closing_time %}
         <div class="mb-30">
@@ -96,13 +104,6 @@
         </div>
       {% endif %}
       
-      <div class="cafe-actions">
-        {% if user == cafe.posted_by %}
-          <a href="{% url 'cafe-update' cafe.pk %}" class="action-btn btn-edit">✏️ Edit</a>
-          <a href="{% url 'cafe-delete' cafe.pk %}" class="action-btn btn-delete">🗑️ Delete</a>
-        {% endif %}
-        
-      </div>
 
       <!-- Photo Gallery -->
       <div class="mt-30">
@@ -110,7 +111,7 @@
         <div class="photo-gallery">
           {% for photo in photos %}
             <div class="photo-item" style="position: relative;">
-              <img src="{{ photo.image.url }}" alt="{{ photo.caption }}">
+              <img src="{{ photo.image.url }}" alt="{{ photo.caption }}" onclick="openImageModal('{{ photo.image.url }}', '{{ photo.caption|escapejs }}')">
               {% if user == photo.uploaded_by or user == cafe.posted_by %}
                 <form action="{% url 'delete-photo' photo.id %}" method="post" style="position: absolute; top: 10px; right: 10px;">
                   {% csrf_token %}
@@ -212,12 +213,11 @@
             </div>
           {% endif %}
         </div>
-      </div>
       
       <!-- User Reviews Section -->
-      <div class="user-reviews-section mt-30">
-        <h3 style="margin-bottom: 20px; border-bottom: 2px solid #e5e5e5; padding-bottom: 10px;">User Reviews</h3>
-        <div>
+      <div class="mt-30">
+        <h3>User Reviews</h3>
+        <div class="reviews-content">
           {% for rating in cafe.ratings.all %}
             <div class="comment-item" style="position: relative;">
               <div class="comment-header">
@@ -301,6 +301,45 @@
         menus.forEach(function(menu) {
           menu.style.display = 'none';
         });
+      }
+    });
+  </script>
+
+  <!-- Image Modal -->
+  <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeImageModal()">&times;</span>
+      <img id="modalImage" src="" alt="">
+      <div id="modalCaption" class="modal-caption"></div>
+    </div>
+  </div>
+
+  <script>
+    function openImageModal(imageSrc, caption) {
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImage');
+      const modalCaption = document.getElementById('modalCaption');
+      
+      modal.style.display = 'block';
+      modalImg.src = imageSrc;
+      modalCaption.textContent = caption || '';
+      
+      // Prevent body scroll when modal is open
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeImageModal() {
+      const modal = document.getElementById('imageModal');
+      modal.style.display = 'none';
+      
+      // Restore body scroll
+      document.body.style.overflow = 'auto';
+    }
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeImageModal();
       }
     });
   </script>

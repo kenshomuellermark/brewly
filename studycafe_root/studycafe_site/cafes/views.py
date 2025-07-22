@@ -295,3 +295,31 @@ def unfollow_user(request, user_id):
     messages.success(request, f'You have unfollowed {user_to_unfollow.username}.')
     return redirect('profile')
 
+
+@login_required
+def user_followers(request, user_id):
+    """View to show all followers of a specific user"""
+    profile_user = get_object_or_404(User, id=user_id)
+    followers = profile_user.followers.all()
+    
+    context = {
+        'profile_user': profile_user,
+        'followers': followers,
+        'page_title': f"{profile_user.username}'s Followers"
+    }
+    return render(request, 'cafes/user_followers.html', context)
+
+
+@login_required
+def user_following(request, user_id):
+    """View to show all users that a specific user is following"""
+    profile_user = get_object_or_404(User, id=user_id)
+    following = profile_user.following.all()
+    
+    context = {
+        'profile_user': profile_user,
+        'following': following,
+        'page_title': f"Users {profile_user.username} follows"
+    }
+    return render(request, 'cafes/user_following.html', context)
+

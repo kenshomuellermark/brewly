@@ -18,38 +18,29 @@
         {% endif %}
         
         {% if user == profile_user %}
-          <div class="mt-20">
-            <a href="{% url 'edit_profile' %}" class="action-btn btn-edit" style="margin-right: 15px;">Edit Profile</a>
-            <a href="{% url 'custom_password_change' %}" class="action-btn btn-primary" style="margin-right: 15px;">Change Password</a>
+          <div class="profile-actions">
+            <a href="{% url 'edit_profile' %}" class="profile-action-btn primary">Edit Profile</a>
             <form action="{% url 'logout' %}" method="post" style="display: inline;">
               {% csrf_token %}
-              <button type="submit" class="action-btn" style="background-color: #CD5C5C; color: white;">Logout</button>
+              <button type="submit" class="profile-action-btn danger">Logout</button>
             </form>
           </div>
         {% endif %}
       </div>
-    </div>
-    
-    <div class="profile-stats">
-      <div class="stat-item">
-        <div class="stat-number">{{ cafes.count }}</div>
-        <div class="stat-label">Cafes Posted</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ ratings.count }}</div>
-        <div class="stat-label">Reviews</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ bookmarked_cafes.count }}</div>
-        <div class="stat-label">Saved</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ followers.count }}</div>
-        <div class="stat-label">Followers</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-number">{{ following.count }}</div>
-        <div class="stat-label">Following</div>
+
+      <div class="profile-stats">
+        <div class="stat-item">
+          <div class="stat-number">{{ cafes.count }}</div>
+          <div class="stat-label">Cafes Listed</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">{{ followers.count }}</div>
+          <div class="stat-label">Followers</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number">{{ following.count }}</div>
+          <div class="stat-label">Following</div>
+        </div>
       </div>
     </div>
     
@@ -70,6 +61,24 @@
           </div>
         {% empty %}
           <p style="grid-column: 1 / -1; color: #999;">No cafes posted yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <div style="margin-top: 40px;">
+      <h3 class="mb-20">Saved Cafes</h3>
+      <div class="cafe-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
+        {% for cafe in bookmarked_cafes|slice:":6" %}
+          <div class="cafe-card">
+            <div class="cafe-card-body">
+              <h4 class="cafe-card-title">
+                <a href="{% url 'cafe-detail' cafe.id %}" style="color: inherit; text-decoration: none;">{{ cafe.name }}</a>
+              </h4>
+              <p class="cafe-card-info">📍 {{ cafe.address }}</p>
+            </div>
+          </div>
+        {% empty %}
+          <p style="grid-column: 1 / -1; color: #999;">No saved cafes yet.</p>
         {% endfor %}
       </div>
     </div>
@@ -97,64 +106,6 @@
       {% empty %}
         <p style="color: #999;">No reviews yet.</p>
       {% endfor %}
-    </div>
-    
-    <div style="margin-top: 40px;">
-      <h3 class="mb-20">Saved Cafes</h3>
-      <div class="cafe-grid" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));">
-        {% for cafe in bookmarked_cafes|slice:":6" %}
-          <div class="cafe-card">
-            <div class="cafe-card-body">
-              <h4 class="cafe-card-title">
-                <a href="{% url 'cafe-detail' cafe.id %}" style="color: inherit; text-decoration: none;">{{ cafe.name }}</a>
-              </h4>
-              <p class="cafe-card-info">📍 {{ cafe.address }}</p>
-            </div>
-          </div>
-        {% empty %}
-          <p style="grid-column: 1 / -1; color: #999;">No saved cafes yet.</p>
-        {% endfor %}
-      </div>
-    </div>
-    
-    <div class="grid grid-cols-2" style="margin-top: 40px; gap: 40px;">
-      <div>
-        <h3 class="mb-20">Followers ({{ followers.count }})</h3>
-        {% for follow in followers|slice:":10" %}
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
-            <span class="bold">{{ follow.follower.username }}</span>
-            {% if user == profile_user and user != follow.follower %}
-              {% if follow.follower in user.following.all|default:default %}
-                <span class="badge badge-gray">Following</span>
-              {% else %}
-                <form action="{% url 'follow-user' follow.follower.id %}" method="post">
-                  {% csrf_token %}
-                  <button type="submit" class="btn-accent action-btn" style="padding: 5px 15px; font-size: 14px;">Follow back</button>
-                </form>
-              {% endif %}
-            {% endif %}
-          </div>
-        {% empty %}
-          <p style="color: #999;">No followers yet.</p>
-        {% endfor %}
-      </div>
-      
-      <div>
-        <h3 class="mb-20">Following ({{ following.count }})</h3>
-        {% for follow in following|slice:":10" %}
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e5e5e5;">
-            <span class="bold">{{ follow.following.username }}</span>
-            {% if user == profile_user %}
-              <form action="{% url 'unfollow-user' follow.following.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn-outline action-btn" style="padding: 5px 15px; font-size: 14px;">Unfollow</button>
-              </form>
-            {% endif %}
-          </div>
-        {% empty %}
-          <p style="color: #999;">Not following anyone yet.</p>
-        {% endfor %}
-      </div>
     </div>
   </div>
 {% endblock %}
