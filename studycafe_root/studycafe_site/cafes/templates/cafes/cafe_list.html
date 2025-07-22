@@ -1,35 +1,103 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Study Cafes</h1>
-  <form method="get" style="margin-bottom: 1em;">
-    <input type="text" name="q" placeholder="Search by name or address" value="{{ request.GET.q }}">
-    <label><input type="checkbox" name="wifi" {% if request.GET.wifi %}checked{% endif %}> WiFi</label>
-    <label><input type="checkbox" name="power" {% if request.GET.power %}checked{% endif %}> Power Outlet</label>
-    <label><input type="checkbox" name="restroom" {% if request.GET.restroom %}checked{% endif %}> Restroom</label>
-    <button type="submit">Search/Filter</button>
-    <a href="{% url 'cafe-list' %}">Reset</a>
-  </form>
-  <a href="{% url 'cafe-create' %}">Add New Cafe</a> | 
-  <a href="{% url 'map' %}">View Map</a>
-  <ul>
+  <h1 class="text-center mb-30">Find Your Perfect Study Spot</h1>
+  
+  <div class="search-filter-container">
+    <form method="get">
+      <div class="search-box">
+        <input type="text" name="q" class="search-input" placeholder="Search by name or address" value="{{ request.GET.q }}">
+        <button type="submit" class="search-btn">Search</button>
+      </div>
+      
+      <div class="filter-section">
+        <div class="filter-item">
+          <input type="checkbox" name="wifi" id="wifi" class="filter-checkbox" {% if request.GET.wifi %}checked{% endif %}>
+          <label for="wifi" class="filter-label">📶 WiFi</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" name="power" id="power" class="filter-checkbox" {% if request.GET.power %}checked{% endif %}>
+          <label for="power" class="filter-label">🔌 Power Outlets</label>
+        </div>
+        <div class="filter-item">
+          <input type="checkbox" name="restroom" id="restroom" class="filter-checkbox" {% if request.GET.restroom %}checked{% endif %}>
+          <label for="restroom" class="filter-label">🚻 Restroom</label>
+        </div>
+        <a href="{% url 'cafe-list' %}" class="action-btn btn-edit">Reset Filters</a>
+      </div>
+    </form>
+  </div>
+  
+  
+  <div class="cafe-grid">
     {% for cafe in cafes %}
-      <li>
-        <a href="{% url 'cafe-detail' cafe.pk %}">{{ cafe.name }}</a>
-        ({{ cafe.address }})
-        {% if cafe.average_rating > 0 %}
-          | ⭐ {{ cafe.average_rating|floatformat:1 }}/5
+      <div class="cafe-card">
+        {% if cafe.photos.first %}
+          <img src="{{ cafe.photos.first.image.url }}" alt="{{ cafe.name }}" class="cafe-card-image">
+        {% else %}
+          <div class="cafe-card-image" style="display: flex; align-items: center; justify-content: center; font-size: 48px; color: #999;">☕</div>
         {% endif %}
-        {% if cafe.is_open_now == True %}
-          | 🕐 Open
-        {% elif cafe.is_open_now == False %}
-          | 🕐 Closed
-        {% endif %}
-        {% if cafe.has_wifi %} | WiFi{% endif %}
-        {% if cafe.has_power_outlet %} | Power{% endif %}
-        {% if cafe.has_restroom %} | Restroom{% endif %}
-      </li>
+        
+        <div class="cafe-card-body">
+          <h3 class="cafe-card-title">
+            <a href="{% url 'cafe-detail' cafe.pk %}" style="color: inherit; text-decoration: none;">{{ cafe.name }}</a>
+          </h3>
+          
+          <p class="cafe-card-info">📍 {{ cafe.address }}</p>
+          
+          <div class="cafe-amenities">
+            {% if cafe.has_wifi %}
+              <span class="amenity-badge">📶 WiFi</span>
+            {% endif %}
+            {% if cafe.has_power_outlet %}
+              <span class="amenity-badge">🔌 Power</span>
+            {% endif %}
+            {% if cafe.has_restroom %}
+              <span class="amenity-badge">🚻 Restroom</span>
+            {% endif %}
+          </div>
+          
+          <div class="cafe-card-meta">
+            <div class="cafe-rating">
+              {% if cafe.average_rating > 0 %}
+                ⭐ {{ cafe.average_rating|floatformat:1 }}/5
+              {% else %}
+                <span style="color: #999;">No ratings yet</span>
+              {% endif %}
+            </div>
+            
+            <div>
+              {% if cafe.is_open_now == True %}
+                <span class="cafe-status status-open">Open Now</span>
+              {% elif cafe.is_open_now == False %}
+                <span class="cafe-status status-closed">Closed</span>
+              {% else %}
+                <span class="cafe-status" style="background-color: #f0f0f0; color: #666;">Hours Unknown</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
     {% empty %}
-      <li>No cafes found.</li>
+      <div class="text-center" style="grid-column: 1 / -1; padding: 60px 0;">
+        <h3 style="color: #999;">No cafes found</h3>
+        <p style="color: #666;">Try adjusting your search or <a href="{% url 'cafe-create' %}">add a new cafe</a></p>
+      </div>
     {% endfor %}
-  </ul>
+  </div>
+  
+  {% if page_obj %}
+    <div class="pagination">
+      {% if page_obj.has_previous %}
+        <a href="?page=1{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wifi %}&wifi=on{% endif %}{% if request.GET.power %}&power=on{% endif %}{% if request.GET.restroom %}&restroom=on{% endif %}" class="page-link">First</a>
+        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wifi %}&wifi=on{% endif %}{% if request.GET.power %}&power=on{% endif %}{% if request.GET.restroom %}&restroom=on{% endif %}" class="page-link">Previous</a>
+      {% endif %}
+      
+      <span class="page-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wifi %}&wifi=on{% endif %}{% if request.GET.power %}&power=on{% endif %}{% if request.GET.restroom %}&restroom=on{% endif %}" class="page-link">Next</a>
+        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.wifi %}&wifi=on{% endif %}{% if request.GET.power %}&power=on{% endif %}{% if request.GET.restroom %}&restroom=on{% endif %}" class="page-link">Last</a>
+      {% endif %}
+    </div>
+  {% endif %}
 {% endblock %}

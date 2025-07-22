@@ -1,32 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Study Cafe Finder</title>
+  <title>Brewly - Find Your Study Spot</title>
+  {% load static %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="{% static 'cafes/css/style.css' %}">
 </head>
 <body>
-  <a href="{% url 'home' %}">Home</a> | <a href="{% url 'map' %}">Map</a>
-  {% if user.is_authenticated %}
-    <p>Welcome, {{ user.username }}! 
-      <form action="{% url 'logout' %}" method="post">
-      {% csrf_token %}
-      <button type="submit">Logout</button>
-  </form> | <a href="{% url 'custom_password_change' %}">Change Password</a></p>
-  {% else %}
-    <a href="{% url 'login' %}">Login</a>
-  {% endif %}
-  {% if not user.is_authenticated %}
-    <a href="{% url 'register' %}">Register</a>
-  {% endif %}
+  <div class="navbar">
+    <div class="nav-container">
+      <div class="nav-left">
+        <div class="nav-brand">
+          <a href="{% url 'home' %}" style="color: white; text-decoration: none;">Brewly</a>
+        </div>
+        <div class="nav-links">
+          <a href="{% url 'map' %}">Map</a>
+        </div>
+      </div>
+      
+      <div class="nav-right">
+        {% if user.is_authenticated %}
+          <span style="color: #F5E6D3;">Welcome, {{ user.username }}!</span>
+          <a href="{% url 'profile' %}" style="color: white;">Profile</a>
+          <a href="{% url 'cafe-create' %}" class="logout-btn" style="background-color: #8B6445;">+ Add Cafe</a>
+        {% else %}
+          <a href="{% url 'login' %}" style="color: white;">Login</a>
+          <a href="{% url 'register' %}" style="color: white;">Register</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
   {% if messages %}
-    <ul>
+    <div class="messages-container">
       {% for message in messages %}
-        <li>{{ message }}</li>
+        <div class="message message-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">
+          {{ message }}
+        </div>
       {% endfor %}
-    </ul>
+    </div>
   {% endif %}
-  {% if user.is_authenticated %}
-    <a href="{% url 'profile' %}">Profile</a>
-  {% endif %}
-  {% block content %}{% endblock %}
+
+  <div class="main-container">
+    {% block content %}{% endblock %}
+  </div>
 </body>
 </html>

@@ -1,9 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
-  <h2>Login</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Login</button>
-  </form>
+  <div class="form-container">
+    <h2 class="form-title">Welcome Back!</h2>
+    <p class="text-center mb-30" style="color: #666;">Login to discover the best study cafes</p>
+    
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group">
+        <label for="id_username" class="form-label">Username</label>
+        <input type="text" name="username" class="form-input" required id="id_username" autofocus>
+      </div>
+      
+      <div class="form-group">
+        <label for="id_password" class="form-label">Password</label>
+        <input type="password" name="password" class="form-input" required id="id_password">
+      </div>
+      
+      {% if form.errors %}
+        <div class="alert alert-error">
+          Please check your username and password.
+        </div>
+      {% endif %}
+      
+      <button type="submit" class="form-submit">Login</button>
+    </form>
+    
+    <p class="text-center mt-30">
+      Don't have an account? <a href="{% url 'register' %}">Sign up here</a>
+    </p>
+    <p class="text-center">
+      <a href="{% url 'password_reset' %}">Forgot your password?</a>
+    </p>
+  </div>
 {% endblock %}
