@@ -1,0 +1,307 @@
+{% extends 'base-optimized.html' %}
+{% load static %}
+
+{% block title %}Discover Cafés - Brewly{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section fade-in-up">
+  <h1 class="hero-title">Find Your Perfect Study Spot</h1>
+  <p class="hero-subtitle">
+    Discover premium cafés with WiFi, power outlets, and the perfect ambiance for productivity
+  </p>
+  
+  {% if user.is_authenticated %}
+    <div style="margin-top: 32px;">
+      <a href="{% url 'cafe-create' %}" class="btn-primary" style="font-size: 18px; padding: 16px 32px;">
+        ✨ Add Your Favorite Café
+      </a>
+    </div>
+  {% endif %}
+</section>
+
+<!-- Search and Filters -->
+<section class="search-filter-container fade-in-up">
+  <form method="get" class="search-form">
+    <div class="search-box">
+      <input 
+        type="text" 
+        name="search" 
+        class="search-input" 
+        placeholder="Search cafés by name, location, or description..." 
+        value="{{ request.GET.search }}"
+        autocomplete="off"
+      >
+      <button type="submit" class="search-btn">
+        🔍 Search
+      </button>
+    </div>
+    
+    <div class="filter-section">
+      <div class="filter-item">
+        <input type="checkbox" name="has_wifi" class="filter-checkbox" id="wifi" 
+               {% if request.GET.has_wifi %}checked{% endif %}>
+        <label for="wifi" class="filter-label">📶 WiFi</label>
+      </div>
+      
+      <div class="filter-item">
+        <input type="checkbox" name="has_power_outlet" class="filter-checkbox" id="power" 
+               {% if request.GET.has_power_outlet %}checked{% endif %}>
+        <label for="power" class="filter-label">🔌 Power Outlets</label>
+      </div>
+      
+      <div class="filter-item">
+        <input type="checkbox" name="has_restroom" class="filter-checkbox" id="restroom" 
+               {% if request.GET.has_restroom %}checked{% endif %}>
+        <label for="restroom" class="filter-label">🚻 Restroom</label>
+      </div>
+      
+      <div class="filter-item">
+        <input type="checkbox" name="open_now" class="filter-checkbox" id="open-now" 
+               {% if request.GET.open_now %}checked{% endif %}>
+        <label for="open-now" class="filter-label">🕐 Open Now</label>
+      </div>
+      
+      {% if request.GET %}
+        <a href="{% url 'home' %}" class="filter-reset btn-primary" style="padding: 8px 16px; font-size: 14px;">
+          🗑️ Clear Filters
+        </a>
+      {% endif %}
+    </div>
+  </form>
+</section>
+
+<!-- Results Summary -->
+{% if cafes %}
+  <div class="results-summary" style="margin-bottom: 24px; text-align: center;">
+    <p style="color: var(--text-secondary); font-size: 16px;">
+      {% if request.GET.search %}
+        Found {{ cafes|length }} café{{ cafes|length|pluralize }} for "{{ request.GET.search }}"
+      {% else %}
+        Showing {{ cafes|length }} premium café{{ cafes|length|pluralize }}
+      {% endif %}
+    </p>
+  </div>
+{% endif %}
+
+<!-- Café Grid -->
+{% if cafes %}
+  <section class="cafe-grid">
+    {% for cafe in cafes %}
+      <article class="cafe-card fade-in-up" style="animation-delay: {{ forloop.counter0|floatformat:1 }}00ms;">
+        <!-- Café Image -->
+        <div class="cafe-card-image-container" style="position: relative; overflow: hidden;">
+          {% if cafe.photo %}
+            <img src="{{ cafe.photo.url }}" alt="{{ cafe.name }}" class="cafe-card-image">
+          {% else %}
+            <div class="cafe-card-image" style="display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--cream) 0%, rgba(212, 165, 116, 0.2) 100%);">
+              <span style="font-size: 48px; opacity: 0.6;">☕</span>
+            </div>
+          {% endif %}
+          
+          <!-- Status Badge -->
+          {% if cafe.is_open_now is not None %}
+            <div class="cafe-status {% if cafe.is_open_now %}status-open{% else %}status-closed{% endif %}" 
+                 style="position: absolute; top: 16px; right: 16px;">
+              {% if cafe.is_open_now %}
+                ✅ Open
+              {% else %}
+                ❌ Closed
+              {% endif %}
+            </div>
+          {% endif %}
+          
+          <!-- Bookmark Button (if user is authenticated) -->
+          {% if user.is_authenticated %}
+            <button class="bookmark-btn" 
+                    style="position: absolute; top: 16px; left: 16px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; transition: all 0.3s ease;"
+                    onclick="toggleBookmark({{ cafe.id }})">
+              <span style="font-size: 18px;">🤍</span>
+            </button>
+          {% endif %}
+        </div>
+        
+        <!-- Café Content -->
+        <div class="cafe-card-body">
+          <h3 class="cafe-card-title">
+            <a href="{% url 'cafe-detail' cafe.pk %}" style="text-decoration: none; color: inherit;">
+              {{ cafe.name }}
+            </a>
+          </h3>
+          
+          <div class="cafe-card-address">
+            {{ cafe.address }}
+          </div>
+          
+          {% if cafe.description %}
+            <p style="color: var(--text-secondary); font-size: 14px; line-height: 1.5; margin-bottom: 16px;">
+              {{ cafe.description|truncatewords:15 }}
+            </p>
+          {% endif %}
+          
+          <!-- Amenities -->
+          <div class="cafe-amenities">
+            {% if cafe.has_wifi %}
+              <span class="amenity-badge">📶 WiFi</span>
+            {% endif %}
+            {% if cafe.has_power_outlet %}
+              <span class="amenity-badge">🔌 Power</span>
+            {% endif %}
+            {% if cafe.has_restroom %}
+              <span class="amenity-badge">🚻 Restroom</span>
+            {% endif %}
+          </div>
+          
+          <!-- Operating Hours -->
+          {% if cafe.opening_time and cafe.closing_time %}
+            <div style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+              🕐 {{ cafe.opening_time|time:"g:i A" }} - {{ cafe.closing_time|time:"g:i A" }}
+            </div>
+          {% endif %}
+          
+          <!-- Meta Information -->
+          <div class="cafe-card-meta">
+            <div class="cafe-rating">
+              <div class="rating-stars">
+                {% for i in "12345" %}
+                  {% if forloop.counter <= cafe.average_rating|floatformat:0 %}
+                    <span class="star">⭐</span>
+                  {% else %}
+                    <span class="star" style="opacity: 0.3;">⭐</span>
+                  {% endif %}
+                {% endfor %}
+              </div>
+              <span style="margin-left: 8px; font-size: 14px;">
+                {{ cafe.average_rating|floatformat:1 }} ({{ cafe.ratings.count }})
+              </span>
+            </div>
+            
+            <div style="color: var(--text-secondary); font-size: 14px;">
+              By {{ cafe.posted_by.first_name|default:cafe.posted_by.username }}
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div style="margin-top: 20px; display: flex; gap: 12px;">
+            <a href="{% url 'cafe-detail' cafe.pk %}" class="btn-primary" style="flex: 1; text-align: center; text-decoration: none; font-size: 14px; padding: 12px;">
+              View Details
+            </a>
+            {% if cafe.latitude and cafe.longitude %}
+              <button onclick="showOnMap({{ cafe.latitude }}, {{ cafe.longitude }})" 
+                      style="background: var(--accent-gold); color: white; border: none; border-radius: 12px; padding: 12px 16px; cursor: pointer; transition: all 0.3s ease; font-weight: 600;">
+                📍 Map
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </article>
+    {% endfor %}
+  </section>
+{% else %}
+  <!-- No Results -->
+  <section class="no-results" style="text-align: center; padding: 80px 0;">
+    <div class="glass-card" style="max-width: 500px; margin: 0 auto; padding: 48px;">
+      <div style="font-size: 64px; margin-bottom: 24px;">☕</div>
+      <h2 style="font-family: 'Poppins', sans-serif; font-size: 28px; margin-bottom: 16px; color: var(--primary-coffee);">
+        No cafés found
+      </h2>
+      <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 16px;">
+        {% if request.GET.search %}
+          We couldn't find any cafés matching "{{ request.GET.search }}". Try adjusting your search or filters.
+        {% else %}
+          No cafés have been added yet. Be the first to discover a great study spot!
+        {% endif %}
+      </p>
+      
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+        {% if request.GET %}
+          <a href="{% url 'home' %}" class="btn-primary">Clear Search</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+          <a href="{% url 'cafe-create' %}" class="btn-primary">Add First Café</a>
+        {% else %}
+          <a href="{% url 'register' %}" class="btn-primary">Join Brewly</a>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+{% endif %}
+
+<!-- Load More / Pagination -->
+{% if is_paginated %}
+  <nav class="pagination" style="margin-top: 60px;">
+    {% if page_obj.has_previous %}
+      <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">First</a>
+      <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">Previous</a>
+    {% endif %}
+    
+    <span class="page-current">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">Next</a>
+      <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="page-link">Last</a>
+    {% endif %}
+  </nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Auto-submit form on filter change
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.filter-checkbox');
+    checkboxes.forEach(function(checkbox) {
+      checkbox.addEventListener('change', function() {
+        // Add a small delay for better UX
+        setTimeout(function() {
+          document.querySelector('.search-form').submit();
+        }, 300);
+      });
+    });
+  });
+  
+  // Search suggestions (mock implementation)
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(function() {
+        // Here you could implement actual search suggestions
+        console.log('Search suggestions for:', searchInput.value);
+      }, 300);
+    });
+  });
+  
+  // Bookmark toggle function
+  function toggleBookmark(cafeId) {
+    // This would typically make an AJAX request to toggle bookmark
+    console.log('Toggle bookmark for café:', cafeId);
+    // For now, just toggle the visual state
+    const btn = event.target.closest('.bookmark-btn');
+    const heart = btn.querySelector('span');
+    if (heart.textContent === '🤍') {
+      heart.textContent = '❤️';
+    } else {
+      heart.textContent = '🤍';
+    }
+  }
+  
+  // Show on map function
+  function showOnMap(lat, lng) {
+    // This could open a modal with a map or redirect to map view
+    window.open(`https://maps.google.com/?q=${lat},${lng}`, '_blank');
+  }
+  
+  // Stagger animation for cards
+  document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.cafe-card');
+    cards.forEach(function(card, index) {
+      card.style.animationDelay = `${index * 100}ms`;
+    });
+  });
+</script>
+{% endblock %}
