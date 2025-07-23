@@ -240,6 +240,6 @@ brewly/
 
 ---
 
-**Built with ☕ and 💻 by [Your Name]**
+**Built with ☕ and 💻 by Kensho**
 
-*Happy studying! Find your perfect cafe with Brewly.*
+*Find your perfect place with Brewly.*
